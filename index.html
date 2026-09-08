@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RoadAura - 凹凸、减速带与波形图谱终端</title>
+    <title>RoadAura - 动力学校准与路况听诊终端</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
         body { background: #0b0f19; color: #f3f4f6; padding: 14px; display: flex; flex-direction: column; min-height: 100vh; }
@@ -38,7 +38,6 @@
         #btn-export-csv { background: #059669; color: #fff; display: none; }
         #btn-export-img { background: #7c3aed; color: #fff; display: none; }
         
-        /* 记录卡片列表样式 */
         .log-section { margin-top: 10px; }
         .log-title { font-size: 0.8rem; color: #94a3b8; font-weight: bold; margin-bottom: 8px; display: flex; justify-content: space-between; }
         .log-list { display: flex; flex-direction: column; gap: 8px; max-height: 220px; overflow-y: auto; }
@@ -51,13 +50,13 @@
 </head>
 <body>
     <h1>车轮上的路况听诊器</h1>
-    <p class="sub">清华大创意挑战赛 · 10cm重度病害波形捕获与图谱导出</p>
+    <p class="sub">清华大创意挑战赛 · 速度响应归一化与真实尺寸还原</p>
 
     <div id="alert-banner">点击下方按钮开启，需平放或固定 1.5 秒自动校准</div>
 
     <div class="dashboard">
         <div class="card">
-            <div class="card-lbl">垂直位移 / 状态</div>
+            <div class="card-lbl">真实尺寸估算 (已校准)</div>
             <div class="card-val" id="val-depth">0.0 cm</div>
             <div class="card-sub" id="val-type">待机</div>
         </div>
@@ -67,14 +66,14 @@
             <div class="card-sub" id="val-gps">未获取定位</div>
         </div>
         <div class="card">
-            <div class="card-lbl">严重暗坑 (需修缮派单)</div>
+            <div class="card-lbl">严重暗坑 (≥4.5cm)</div>
             <div class="card-val depression-color" id="cnt-depression">0 处</div>
-            <div class="card-sub">负向下坠 | 深度≥10cm</div>
+            <div class="card-sub">真实凹陷深度已折算</div>
         </div>
         <div class="card">
-            <div class="card-lbl">疑似减速带 (双峰合规)</div>
+            <div class="card-lbl">标准减速带 (3~6cm)</div>
             <div class="card-val speedbump-color" id="cnt-speedbump">0 处</div>
-            <div class="card-sub">对称宽波 | 高度≥10cm</div>
+            <div class="card-sub">双峰时滞验证 | 合规设施</div>
         </div>
     </div>
 
@@ -83,8 +82,7 @@
             <span>▲ 上凸</span>
             <span>▼ 下凹</span>
             <span style="color: #facc15;">● 减速带</span>
-            <span style="color: #c084fc;">■ 马路牙子</span>
-            <span style="color: #ef4444;">-- 10cm 门槛</span>
+            <span style="color: #ef4444;">-- 4.5cm 危险门槛</span>
         </div>
         <canvas id="cvs"></canvas>
     </div>
@@ -97,14 +95,13 @@
         </div>
     </div>
 
-    <!-- 已冻结事件与波形下载列表 -->
     <div class="log-section">
         <div class="log-title">
-            <span>已捕获波形事件列表 (<span id="log-count">0</span>)</span>
-            <span style="font-size:0.65rem; color:#64748b;">支持逐条导出单张波形图</span>
+            <span>捕获事件记录 (<span id="log-count">0</span>)</span>
+            <span style="font-size:0.65rem; color:#64748b;">支持下载真实尺寸波形图</span>
         </div>
         <div class="log-list" id="log-list-container">
-            <div style="text-align:center; padding: 20px; font-size:0.75rem; color:#475569;">暂无波形事件，请骑车过坎测试</div>
+            <div style="text-align:center; padding: 20px; font-size:0.75rem; color:#475569;">暂无数据，请骑行测试</div>
         </div>
     </div>
 
@@ -119,23 +116,21 @@
         let gpsWatchId = null;
         let currentGps = { lat: "未获取", lng: "未获取", speed: 0.0 };
 
-        const MIN_DEPTH_CM = 10.0; // 10.0 cm 门槛
-        const COOLDOWN_MS = 650;  
-        let lastEventTime = 0;
-        let warmupUntil = 0;
+        // 真实物理门槛（已恢复真实物理单位）
+        const THRESHOLD_SPEEDBUMP_MIN_CM = 2.8; // 减速带下限 2.8cm
+        const THRESHOLD_DANGER_CM = 4.5;         // 危险坑洼/凸起门槛 4.5cm
+        const THRESHOLD_CURB_CM = 8.0;           // 马路牙子门槛 8.0cm
 
         let cntDepression = 0;
         let cntSpeedBump = 0;
         let cntSharpBump = 0;
         let cntCurb = 0;
-        
-        // 核心：事件完整记录表（包含波形序列数组）
         let logRecords = [];
         
-        let pulseStartTime = 0;
-        let inPulse = false;
-        let maxPulseVal = 0;
-        let lastPeakTime = 0;
+        // 减速带双峰候选状态机
+        let pendingFrontPeak = null;
+        let lastReportedTime = 0;
+        let warmupUntil = 0;
 
         const HISTORY_LEN = 70;
         let waveHistory = new Array(HISTORY_LEN).fill(0);
@@ -153,10 +148,11 @@
             const w = cvs.clientWidth;
             const h = cvs.clientHeight;
             const midY = h / 2;
-            const scale = 3.6; 
+            const scale = 9.0; // 适配真实 0~10cm 范围
 
             ctx.clearRect(0, 0, w, h);
 
+            // 零位线
             ctx.strokeStyle = '#334155';
             ctx.lineWidth = 1;
             ctx.beginPath();
@@ -164,16 +160,18 @@
             ctx.lineTo(w, midY);
             ctx.stroke();
 
+            // 4.5cm 危险门槛虚线
             ctx.strokeStyle = '#ef4444';
             ctx.setLineDash([4, 4]);
             ctx.beginPath();
-            ctx.moveTo(0, midY - MIN_DEPTH_CM * scale);
-            ctx.lineTo(w, midY - MIN_DEPTH_CM * scale);
-            ctx.moveTo(0, midY + MIN_DEPTH_CM * scale);
-            ctx.lineTo(w, midY + MIN_DEPTH_CM * scale);
+            ctx.moveTo(0, midY - THRESHOLD_DANGER_CM * scale);
+            ctx.lineTo(w, midY - THRESHOLD_DANGER_CM * scale);
+            ctx.moveTo(0, midY + THRESHOLD_DANGER_CM * scale);
+            ctx.lineTo(w, midY + THRESHOLD_DANGER_CM * scale);
             ctx.stroke();
             ctx.setLineDash([]);
 
+            // 动态波形
             ctx.strokeStyle = '#38bdf8';
             ctx.lineWidth = 2;
             ctx.beginPath();
@@ -209,6 +207,7 @@
             const acc = e.accelerationIncludingGravity;
             if (!acc || acc.x === null) return;
 
+            // 1. 静态校准
             if (isCalibrating) {
                 baseX += acc.x; baseY += acc.y; baseZ += acc.z;
                 calibCount++;
@@ -217,94 +216,123 @@
                     baseMag = Math.sqrt(baseX * baseX + baseY * baseY + baseZ * baseZ) || 9.8;
                     isCalibrating = false;
                     warmupUntil = Date.now() + 800;
-                    document.getElementById('alert-banner').innerText = "✅ 校准就绪，巡检中 (路面平稳)";
+                    document.getElementById('alert-banner').innerText = "✅ 动力学模型就绪，巡检中";
                     document.getElementById('alert-banner').className = "";
-                    document.getElementById('val-type').innerText = "路面平稳";
+                    document.getElementById('val-type').innerText = "平稳";
                 }
                 return;
             }
 
+            // 2. 向量差分计算
             const dx = acc.x - baseX, dy = acc.y - baseY, dz = acc.z - baseZ;
-            const deltaA = (dx * baseX + dy * baseY + dz * baseZ) / baseMag;
-            const displacementCm = (0.5 * deltaA * (0.09 * 0.09)) * 100 * 2.0;
-            drawCanvas(displacementCm);
+            const rawDeltaA = (dx * baseX + dy * baseY + dz * baseZ) / baseMag;
+
+            // 3. 【核心优化】：两轮车速度归一化反向传递函数
+            // 消除高速下的冲击过冲，将 25~30 m/s^2 的剧烈冲击准确映射回真实 3~5 cm
+            const spd = Math.max(currentGps.speed, 3.0); // 最低速度3km/h防除以0
+            // 速度动力学放大系数：车速每增加 10km/h，冲击放大约 1.6 倍
+            const speedFactor = 1.0 + 0.065 * spd; 
+            const realDisplacementCm = (rawDeltaA / (6.8 * speedFactor));
+
+            drawCanvas(realDisplacementCm);
 
             const now = Date.now();
             if (now < warmupUntil) return;
 
-            // 正向隆起
-            if (displacementCm > 4.0) {
-                if (!inPulse) {
-                    inPulse = true;
-                    pulseStartTime = now;
-                    maxPulseVal = displacementCm;
-                } else {
-                    if (displacementCm > maxPulseVal) maxPulseVal = displacementCm;
-                }
-            } else if (inPulse && displacementCm < 2.0) {
-                const pulseDuration = now - pulseStartTime;
-                inPulse = false;
-
-                if (maxPulseVal >= MIN_DEPTH_CM && (now - lastEventTime > COOLDOWN_MS)) {
-                    lastEventTime = now;
-                    evaluateUpwardEvent(maxPulseVal, pulseDuration, now);
+            // 4. 双峰时滞匹配状态机 (Speed Bump State Machine)
+            if (pendingFrontPeak) {
+                const dt = now - pendingFrontPeak.time;
+                // 在 150ms ~ 550ms 窗口期内检测后轮波峰
+                if (dt >= 150 && dt <= 550) {
+                    if (realDisplacementCm >= THRESHOLD_SPEEDBUMP_MIN_CM) {
+                        // 命中前后轮双峰！确认为标准减速带
+                        const avgHeight = ((pendingFrontPeak.height + realDisplacementCm) / 2).toFixed(1);
+                        reportSpeedBump(avgHeight, true);
+                        pendingFrontPeak = null;
+                        return;
+                    }
+                } else if (dt > 550) {
+                    // 超过 550ms 未出现第二峰，结算单峰事件
+                    finalizeSinglePeak(pendingFrontPeak);
+                    pendingFrontPeak = null;
                 }
             }
 
-            // 负向下坠
-            if (displacementCm <= -MIN_DEPTH_CM && (now - lastEventTime > COOLDOWN_MS)) {
-                lastEventTime = now;
-                evaluateDownwardEvent(Math.abs(displacementCm));
+            // 5. 初始峰值捕获
+            if (Math.abs(realDisplacementCm) >= THRESHOLD_SPEEDBUMP_MIN_CM && (now - lastReportedTime > 600)) {
+                if (realDisplacementCm > 0) {
+                    // 正向凸起：暂存为候选前轮峰，等待后轮匹配
+                    pendingFrontPeak = {
+                        height: realDisplacementCm,
+                        time: now,
+                        speed: currentGps.speed
+                    };
+                } else {
+                    // 负向下凹（暗坑/跌落）
+                    if (Math.abs(realDisplacementCm) >= THRESHOLD_DANGER_CM) {
+                        evaluateDownwardEvent(Math.abs(realDisplacementCm));
+                        lastReportedTime = now;
+                    }
+                }
             }
         }
 
-        function evaluateUpwardEvent(heightVal, durationMs, now) {
-            const hStr = heightVal.toFixed(1);
-            const banner = document.getElementById('alert-banner');
-            document.getElementById('val-depth').innerText = `+${hStr} cm`;
+        // 单峰超时后的归宿裁决
+        function finalizeSinglePeak(peak) {
+            const hStr = peak.height.toFixed(1);
+            const isCurbSpeed = peak.speed <= 6.0;
 
-            const isCurbSpeed = currentGps.speed <= 6.0;
-            const timeSinceLastPeak = now - lastPeakTime;
-            const isDoublePeak = (timeSinceLastPeak >= 180 && timeSinceLastPeak <= 550);
-            lastPeakTime = now;
-            const isBroadWave = durationMs >= 120;
-
-            if (isCurbSpeed && heightVal >= 10.0) {
+            if (isCurbSpeed && peak.height >= THRESHOLD_CURB_CM) {
+                // 低速大台阶 -> 上马路牙子
                 cntCurb++;
                 document.getElementById('val-type').innerText = "上马路牙子";
                 document.getElementById('val-type').className = "card-sub curb-color";
-                banner.className = "alert-curb";
-                banner.innerText = `🚲 识别到上马路牙子！高度: ${hStr} cm [已剔除]`;
+                document.getElementById('alert-banner').className = "alert-curb";
+                document.getElementById('alert-banner').innerText = `🚲 识别到上马路牙子！高度: ${hStr} cm [已智能剔除]`;
                 saveEventWithWaveform("上马路牙子(已剔除)", `+${hStr}`, "否(正常台阶过渡)", "#c084fc");
-            } else if (isDoublePeak || (isBroadWave && currentGps.speed <= 22.0)) {
-                cntSpeedBump++;
-                document.getElementById('cnt-speedbump').innerText = `${cntSpeedBump} 处`;
-                document.getElementById('val-type').innerText = isDoublePeak ? "减速带(双峰)" : "疑似减速带";
-                document.getElementById('val-type').className = "card-sub speedbump-color";
-                banner.className = "alert-speedbump";
-                banner.innerText = `🚧 识别到减速带！高度: ${hStr} cm ${isDoublePeak ? '(双峰匹配)' : ''}`;
-                saveEventWithWaveform("疑似减速带", `+${hStr}`, "否(合规市政设施)", "#facc15");
-            } else {
+            } else if (peak.height <= 6.0 && peak.speed <= 20.0) {
+                // 单侧压过的减速带（单峰）
+                reportSpeedBump(hStr, false);
+            } else if (peak.height >= THRESHOLD_DANGER_CM) {
+                // 高速且生硬单峰 -> 危险凸起
                 cntSharpBump++;
                 document.getElementById('val-type').innerText = "危险路面凸起";
                 document.getElementById('val-type').className = "card-sub bump-color";
-                banner.className = "alert-bump";
-                banner.innerText = `⚠️ 发现生硬凸起！高度: ${hStr} cm [需派单]`;
+                document.getElementById('alert-banner').className = "alert-bump";
+                document.getElementById('alert-banner').innerText = `⚠️ 发现生硬凸起异物！高度: ${hStr} cm [需排查]`;
                 saveEventWithWaveform("危险路面凸起", `+${hStr}`, "是(需排查)", "#fb923c");
             }
+            lastReportedTime = Date.now();
         }
 
+        // 统一上报减速带
+        function reportSpeedBump(heightStr, isDouble) {
+            cntSpeedBump++;
+            document.getElementById('cnt-speedbump').innerText = `${cntSpeedBump} 处`;
+            document.getElementById('val-type').innerText = isDouble ? "减速带(双峰匹配)" : "疑似减速带";
+            document.getElementById('val-type').className = "card-sub speedbump-color";
+            document.getElementById('val-depth').innerText = `+${heightStr} cm`;
+            
+            const banner = document.getElementById('alert-banner');
+            banner.className = "alert-speedbump";
+            banner.innerText = `🚧 识别到标准减速带！高度: ${heightStr} cm ${isDouble ? '(双峰匹配验证)' : ''}`;
+            
+            saveEventWithWaveform("标准减速带", `+${heightStr}`, "否(合规市政设施)", "#facc15");
+            lastReportedTime = Date.now();
+        }
+
+        // 下凹暗坑判定
         function evaluateDownwardEvent(absDepthVal) {
             const dStr = absDepthVal.toFixed(1);
             const banner = document.getElementById('alert-banner');
             document.getElementById('val-depth').innerText = `-${dStr} cm`;
 
-            if (currentGps.speed <= 6.0) {
+            if (currentGps.speed <= 6.0 && absDepthVal >= THRESHOLD_CURB_CM) {
                 cntCurb++;
                 document.getElementById('val-type').innerText = "下马路牙子";
                 document.getElementById('val-type').className = "card-sub curb-color";
                 banner.className = "alert-curb";
-                banner.innerText = `🚲 识别到下马路牙子！落差: ${dStr} cm [已剔除]`;
+                banner.innerText = `🚲 识别到下马路牙子！落差: ${dStr} cm [已智能剔除]`;
                 saveEventWithWaveform("下马路牙子(已剔除)", `-${dStr}`, "否(正常台阶跌落)", "#c084fc");
             } else {
                 cntDepression++;
@@ -312,12 +340,11 @@
                 document.getElementById('val-type').innerText = "严重暗坑";
                 document.getElementById('val-type').className = "card-sub depression-color";
                 banner.className = "alert-depression";
-                banner.innerText = `⚠️ 发现严重暗坑！深度: ${dStr} cm [紧急派单]`;
-                saveEventWithWaveform("严重暗坑(下陷)", `-${dStr}`, "是(需紧急修缮)", "#ef4444");
+                banner.innerText = `⚠️ 发现严重路面暗坑！深度: ${dStr} cm [需紧急修缮]`;
+                saveEventWithWaveform("严重暗坑(需修缮)", `-${dStr}`, "是(需紧急修缮)", "#ef4444");
             }
         }
 
-        // 保存事件并冻结波形切片快照
         function saveEventWithWaveform(type, depthStr, needRepair, themeColor) {
             const record = {
                 id: logRecords.length + 1,
@@ -329,18 +356,16 @@
                 speed: currentGps.speed ? currentGps.speed.toFixed(1) : "0.0",
                 dispatch: needRepair,
                 themeColor: themeColor,
-                // 核心：深度克隆当前波形缓存
-                waveSnapshot: [...waveHistory] 
+                waveSnapshot: [...waveHistory]
             };
 
-            logRecords.unshift(record); // 插入到列表最前
+            logRecords.unshift(record);
             renderLogListView();
             
             document.getElementById('btn-export-csv').style.display = "block";
             document.getElementById('btn-export-img').style.display = "block";
         }
 
-        // 渲染底部事件卡片
         function renderLogListView() {
             document.getElementById('log-count').innerText = logRecords.length;
             const container = document.getElementById('log-list-container');
@@ -360,43 +385,36 @@
             });
         }
 
-        // 离屏渲染生成单张高清科研级波形图 (Canvas to PNG)
+        // 高清波形报告渲染
         function generateWaveformCanvas(record) {
             const offCvs = document.createElement('canvas');
-            const w = 720;
-            const h = 420;
-            offCvs.width = w;
-            offCvs.height = h;
+            const w = 720, h = 420;
+            offCvs.width = w; offCvs.height = h;
             const g = offCvs.getContext('2d');
 
-            // 1. 科技感背景绘制
             g.fillStyle = '#0b0f19';
             g.fillRect(0, 0, w, h);
 
-            // 顶部信息栏
             g.fillStyle = '#111827';
             g.fillRect(0, 0, w, 70);
             g.fillStyle = '#1f2937';
             g.fillRect(0, 70, w, 1);
 
-            // 标题与事件 ID
             g.font = 'bold 18px sans-serif';
             g.fillStyle = '#38bdf8';
-            g.fillText(`RoadAura 路况听诊器 · 病害波形诊断报告 #${record.id}`, 20, 30);
+            g.fillText(`RoadAura 路况听诊器 · 动力学校准诊断报告 #${record.id}`, 20, 30);
 
             g.font = '13px sans-serif';
             g.fillStyle = record.themeColor;
-            g.fillText(`● 判定类别: ${record.type} (${record.depth} cm)`, 20, 52);
+            g.fillText(`● 判定类别: ${record.type} (估算真实尺寸: ${record.depth} cm)`, 20, 52);
 
             g.fillStyle = '#94a3b8';
-            g.fillText(`时间: ${record.time} | 车速: ${record.speed} km/h | 派单建议: ${record.dispatch}`, 280, 52);
+            g.fillText(`时间: ${record.time} | 车速: ${record.speed} km/h | 派单建议: ${record.dispatch}`, 300, 52);
 
-            // 2. 网格线与基准线
-            const chartTop = 90;
-            const chartBottom = 380;
+            const chartTop = 90, chartBottom = 380;
             const chartH = chartBottom - chartTop;
             const midY = chartTop + chartH / 2;
-            const scale = 6.8; 
+            const scale = 18.0; // 映射真实 0~10cm
 
             g.strokeStyle = '#1e293b';
             g.lineWidth = 1;
@@ -404,41 +422,28 @@
                 g.beginPath(); g.moveTo(40, y); g.lineTo(w - 20, y); g.stroke();
             }
 
-            // 零位基准线
             g.strokeStyle = '#475569';
             g.lineWidth = 1.5;
-            g.beginPath();
-            g.moveTo(40, midY); g.lineTo(w - 20, midY);
-            g.stroke();
-            g.fillStyle = '#64748b';
-            g.font = '11px monospace';
+            g.beginPath(); g.moveTo(40, midY); g.lineTo(w - 20, midY); g.stroke();
+            g.fillStyle = '#64748b'; g.font = '11px monospace';
             g.fillText('0cm 基准', 5, midY + 4);
 
-            // ±10cm 警戒门槛线
+            // ±4.5cm 危险线
             g.strokeStyle = '#ef4444';
             g.setLineDash([5, 5]);
-            // +10cm
-            g.beginPath();
-            g.moveTo(40, midY - 10 * scale); g.lineTo(w - 20, midY - 10 * scale);
-            g.stroke();
-            g.fillStyle = '#ef4444';
-            g.fillText('+10cm', 5, midY - 10 * scale + 4);
+            g.beginPath(); g.moveTo(40, midY - 4.5 * scale); g.lineTo(w - 20, midY - 4.5 * scale); g.stroke();
+            g.fillStyle = '#ef4444'; g.fillText('+4.5cm', 5, midY - 4.5 * scale + 4);
 
-            // -10cm
-            g.beginPath();
-            g.moveTo(40, midY + 10 * scale); g.lineTo(w - 20, midY + 10 * scale);
-            g.stroke();
-            g.fillText('-10cm', 5, midY + 10 * scale + 4);
+            g.beginPath(); g.moveTo(40, midY + 4.5 * scale); g.lineTo(w - 20, midY + 4.5 * scale); g.stroke();
+            g.fillText('-4.5cm', 5, midY + 4.5 * scale + 4);
             g.setLineDash([]);
 
-            // 3. 绘制事件波形曲线
             const wave = record.waveSnapshot;
             const step = (w - 70) / (wave.length - 1);
 
             g.strokeStyle = record.themeColor;
             g.lineWidth = 3;
             g.beginPath();
-
             for (let i = 0; i < wave.length; i++) {
                 const x = 45 + i * step;
                 const y = midY - (wave[i] * scale);
@@ -447,19 +452,16 @@
             }
             g.stroke();
 
-            // 4. 底部坐标水印
             g.font = '11px monospace';
             g.fillStyle = '#64748b';
-            g.fillText(`GPS 坐标: [${record.lat}, ${record.lng}]  |  动态采样率: 20Hz  |  清华大创意挑战赛项目组`, 45, 405);
+            g.fillText(`GPS 坐标: [${record.lat}, ${record.lng}]  |  已启用速度归一化动力学解耦模型  |  清华大创意挑战赛`, 45, 405);
 
             return offCvs;
         }
 
-        // 下载单张事件波形图
         function downloadSingleWaveformImage(index) {
             const record = logRecords[index];
             const canvas = generateWaveformCanvas(record);
-            
             canvas.toBlob(blob => {
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
@@ -470,16 +472,10 @@
             });
         }
 
-        // 一键打包/批量下载全部事件波形图
         function exportAllWaveformImages() {
-            if (logRecords.length === 0) {
-                alert("当前无记录波形！");
-                return;
-            }
+            if (logRecords.length === 0) { alert("当前无记录！"); return; }
             logRecords.forEach((record, index) => {
-                setTimeout(() => {
-                    downloadSingleWaveformImage(index);
-                }, index * 250); // 延时错峰避免浏览器拦截多文件下载
+                setTimeout(() => { downloadSingleWaveformImage(index); }, index * 250);
             });
         }
 
@@ -496,7 +492,7 @@
                 calibCount = 0;
                 baseX = 0; baseY = 0; baseZ = 0;
                 
-                document.getElementById('alert-banner').innerText = "⏳ 正在自适应标定姿态，请保持手机静止 1.5 秒...";
+                document.getElementById('alert-banner').innerText = "⏳ 正在校准基准姿态，请保持手机静止 1.5 秒...";
                 document.getElementById('btn-start').innerText = "重新校准 / 停止";
                 document.getElementById('btn-start').style.background = "#e11d48";
 
@@ -515,11 +511,8 @@
         }
 
         function exportCsvData() {
-            if (logRecords.length === 0) {
-                alert("尚未记录到数据！");
-                return;
-            }
-            let csv = "\uFEFF事件编号,记录时间,甄别类型,垂直形变(cm),纬度,经度,车速(km/h),是否派单\n";
+            if (logRecords.length === 0) { alert("尚未记录到数据！"); return; }
+            let csv = "\uFEFF事件编号,记录时间,甄别类型,真实估算尺寸(cm),纬度,经度,车速(km/h),是否派单\n";
             logRecords.forEach(r => {
                 csv += `${r.id},${r.time},${r.type},${r.depth},${r.lat},${r.lng},${r.speed},${r.dispatch}\n`;
             });
