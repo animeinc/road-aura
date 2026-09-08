@@ -3,7 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RoadAura - 凹凸路况智能听诊终端</title>
+    <title>RoadAura - 工业级GIS路况多模态感知系统</title>
+    <!-- Leaflet 开源地图核心 -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
         body { background: #0b0f19; color: #f3f4f6; padding: 12px; display: flex; flex-direction: column; min-height: 100vh; }
@@ -27,8 +31,21 @@
         .speedbump-color { color: #facc15 !important; }
         .curb-color { color: #c084fc !important; }
 
+        /* 地图容器与高级夜间滤镜 */
+        .map-wrapper { position: relative; margin-bottom: 8px; border-radius: 8px; overflow: hidden; border: 1px solid #1f2937; }
+        #map { width: 100%; height: 195px; background: #030712; z-index: 1; }
+        
+        .leaflet-tile {
+            filter: invert(100%) hue-rotate(180deg) brightness(88%) contrast(85%);
+        }
+
+        .map-badge { position: absolute; top: 6px; left: 8px; z-index: 1000; background: rgba(15, 23, 42, 0.85); padding: 3px 8px; border-radius: 4px; font-size: 0.65rem; color: #38bdf8; border: 1px solid #38bdf8; pointer-events: none; }
+        .map-controls { position: absolute; bottom: 6px; right: 8px; z-index: 1000; display: flex; gap: 4px; }
+        .map-btn { background: rgba(30, 41, 59, 0.9); border: 1px solid #475569; color: #f8fafc; padding: 4px 8px; border-radius: 4px; font-size: 0.65rem; cursor: pointer; }
+        .map-btn-active { background: #0284c7 !important; border-color: #38bdf8 !important; }
+
         .canvas-container { position: relative; margin-bottom: 8px; }
-        #cvs { width: 100%; height: 130px; background: #030712; border-radius: 8px; border: 1px solid #1f2937; display: block; }
+        #cvs { width: 100%; height: 120px; background: #030712; border-radius: 8px; border: 1px solid #1f2937; display: block; }
         .canvas-legend { position: absolute; top: 4px; left: 6px; font-size: 0.62rem; color: #6b7280; display: flex; gap: 6px; }
 
         .btn-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
@@ -37,11 +54,13 @@
         #btn-start { background: #0284c7; color: #fff; }
         #btn-export-csv { background: #059669; color: #fff; display: none; }
         #btn-export-img { background: #7c3aed; color: #fff; display: none; }
-        #btn-invert { background: #334155; color: #94a3b8; font-size: 0.7rem; padding: 6px; }
+        
+        .mode-bar { display: flex; gap: 6px; }
+        .mode-btn { background: #1e293b; color: #94a3b8; font-size: 0.68rem; padding: 6px; border-radius: 6px; border: 1px solid #334155; }
         
         .log-section { margin-top: 6px; }
-        .log-title { font-size: 0.75rem; color: #94a3b8; font-weight: bold; margin-bottom: 6px; display: flex; justify-content: space-between; }
-        .log-list { display: flex; flex-direction: column; gap: 6px; max-height: 180px; overflow-y: auto; }
+        .log-title { font-size: 0.75rem; color: #94a3b8; font-weight: bold; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; }
+        .log-list { display: flex; flex-direction: column; gap: 6px; max-height: 160px; overflow-y: auto; }
         .log-item { background: #111827; border: 1px solid #1f2937; border-radius: 6px; padding: 8px 10px; display: flex; justify-content: space-between; align-items: center; }
         .log-item-left { display: flex; flex-direction: column; gap: 2px; }
         .log-item-type { font-size: 0.8rem; font-weight: bold; }
@@ -51,31 +70,41 @@
 </head>
 <body>
     <h1>车轮上的路况听诊器</h1>
-    <p class="sub">清华大创意挑战赛 · 首波相位锁定与极性修正</p>
+    <p class="sub">清华大创意挑战赛 · 3.0cm加固算法与GIS智能跟随系统</p>
 
     <div id="alert-banner">点击下方按钮开启，需平放或固定 1.5 秒自动校准</div>
 
     <div class="dashboard">
         <div class="card">
-            <div class="card-lbl">真实尺寸估算 (首波锁定)</div>
+            <div class="card-lbl">垂直位移 (门槛: 3.0cm)</div>
             <div class="card-val" id="val-depth">0.0 cm</div>
             <div class="card-sub" id="val-type">待机</div>
         </div>
         <div class="card">
-            <div class="card-lbl">GPS 车速 / 状态</div>
+            <div class="card-lbl">GPS 车速 / 精度</div>
             <div class="card-val" id="val-speed" style="color:#38bdf8;">0.0 km/h</div>
             <div class="card-sub" id="val-gps">未获取定位</div>
         </div>
         <div class="card">
-            <div class="card-lbl">标准减速带 (3~6cm)</div>
+            <div class="card-lbl">标准减速带 (双峰验证)</div>
             <div class="card-val speedbump-color" id="cnt-speedbump">0 处</div>
-            <div class="card-sub">正向顶起 | 合规设施</div>
+            <div class="card-sub">黄标点 | 轴距时滞拟合</div>
         </div>
         <div class="card">
-            <div class="card-lbl">严重暗坑 (≥4.0cm)</div>
+            <div class="card-lbl">严重暗坑 (≥3.0cm)</div>
             <div class="card-val depression-color" id="cnt-depression">0 处</div>
-            <div class="card-sub">负向下坠 | 需紧急修缮</div>
+            <div class="card-sub">红标点 | 需紧急抢修</div>
         </div>
+    </div>
+
+    <!-- GIS 风险感知电子地图 -->
+    <div class="map-wrapper">
+        <div class="map-badge">🗺️ 道路数字孪生图谱</div>
+        <div class="map-controls">
+            <button class="map-btn map-btn-active" id="btn-follow" onclick="toggleAutoFollow()">视角跟随: ON</button>
+            <button class="map-btn" onclick="recenterMap()">居中</button>
+        </div>
+        <div id="map"></div>
     </div>
 
     <div class="canvas-container">
@@ -83,7 +112,7 @@
             <span>▲ 上凸(+)</span>
             <span>▼ 下凹(-)</span>
             <span style="color: #facc15;">● 减速带</span>
-            <span style="color: #ef4444;">-- 4.0cm 门槛</span>
+            <span style="color: #ef4444;">-- 3.0cm 门槛</span>
         </div>
         <canvas id="cvs"></canvas>
     </div>
@@ -94,13 +123,17 @@
             <button id="btn-export-csv" onclick="exportCsvData()">导出数据 CSV</button>
             <button id="btn-export-img" onclick="exportAllWaveformImages()">导出波形诊断图</button>
         </div>
-        <button id="btn-invert" onclick="togglePolarity()">极性反相保护: 当前【正向(顶起为正)】，点击可手动反转</button>
+        <div class="mode-bar">
+            <button class="mode-btn" id="btn-workmode" onclick="toggleWorkMode()">当前模式: 【实地骑行】</button>
+            <button class="mode-btn" id="btn-invert" onclick="togglePolarity()">极性: 【顶起为正】</button>
+            <button class="mode-btn" style="color:#ef4444;" onclick="clearSavedData()">清空数据</button>
+        </div>
     </div>
 
     <div class="log-section">
         <div class="log-title">
             <span>捕获事件记录 (<span id="log-count">0</span>)</span>
-            <span style="font-size:0.62rem; color:#64748b;">支持下载真实波形图</span>
+            <span style="font-size:0.62rem; color:#64748b;">支持断电存储与地图联动</span>
         </div>
         <div class="log-list" id="log-list-container">
             <div style="text-align:center; padding: 15px; font-size:0.75rem; color:#475569;">暂无数据，请骑行巡检</div>
@@ -108,23 +141,60 @@
     </div>
 
     <script>
+        // ==================== WGS-84 ➔ GCJ-02 火星坐标动态纠偏算法 ====================
+        const PI = 3.1415926535897932384626;
+        const A_AXIS = 6378245.0;
+        const EE = 0.00669342162296594323;
+
+        function transformLat(x, y) {
+            let ret = -100.0 + 2.0 * x + 3.0 * y + 0.2 * y * y + 0.1 * x * y + 0.2 * Math.sqrt(Math.abs(x));
+            ret += (20.0 * Math.sin(6.0 * x * PI) + 20.0 * Math.sin(2.0 * x * PI)) * 2.0 / 3.0;
+            ret += (20.0 * Math.sin(y * PI) + 40.0 * Math.sin(y / 3.0 * PI)) * 2.0 / 3.0;
+            ret += (160.0 * Math.sin(y / 12.0 * PI) + 320 * Math.sin(y * PI / 30.0)) * 2.0 / 3.0;
+            return ret;
+        }
+
+        function transformLng(x, y) {
+            let ret = 300.0 + x + 2.0 * y + 0.1 * x * x + 0.1 * x * y + 0.1 * Math.sqrt(Math.abs(x));
+            ret += (20.0 * Math.sin(6.0 * x * PI) + 20.0 * Math.sin(2.0 * x * PI)) * 2.0 / 3.0;
+            ret += (20.0 * Math.sin(x * PI) + 40.0 * Math.sin(x / 3.0 * PI)) * 2.0 / 3.0;
+            ret += (150.0 * Math.sin(x / 12.0 * PI) + 300.0 * Math.sin(x / 30.0 * PI)) * 2.0 / 3.0;
+            return ret;
+        }
+
+        function wgs84ToGcj02(lng, lat) {
+            if (lng < 72.004 || lng > 137.8347 || lat < 0.8293 || lat > 55.8271) {
+                return [lng, lat];
+            }
+            let dLat = transformLat(lng - 105.0, lat - 35.0);
+            let dLng = transformLng(lng - 105.0, lat - 35.0);
+            let radLat = lat / 180.0 * PI;
+            let magic = Math.sin(radLat);
+            magic = 1 - EE * magic * magic;
+            let sqrtMagic = Math.sqrt(magic);
+            dLat = (dLat * 180.0) / ((A_AXIS * (1 - EE)) / (magic * sqrtMagic) * PI);
+            dLng = (dLng * 180.0) / (A_AXIS / sqrtMagic * Math.cos(radLat) * PI);
+            return [lng + dLng, lat + dLat];
+        }
+
+        // ==================== 全局状态与动力学参数 ====================
         let isRunning = false;
         let isCalibrating = false;
         let calibCount = 0;
         
         let baseX = 0, baseY = 0, baseZ = 0;
         let baseMag = 9.8;
-
-        // 极性翻转因子（默认为 -1，消除惯性力反相）
-        let polaritySign = -1;
+        let polaritySign = -1; // 默认极性取反，保证向上为正
+        let isDemoMode = false; // 是否为路演模拟模式
 
         let gpsWatchId = null;
-        let currentGps = { lat: "未获取", lng: "未获取", speed: 0.0 };
+        let currentGps = { lat: "未获取", lng: "未获取", speed: 0.0, accuracy: 0 };
+        let currentGcjGps = { lat: 0, lng: 0 };
 
-        // 标定真实物理门槛
-        const THRESHOLD_SPEEDBUMP_MIN_CM = 2.5; // 减速带起步 2.5cm
-        const THRESHOLD_DANGER_CM = 4.0;         // 危险暗坑门槛 4.0cm
-        const THRESHOLD_CURB_CM = 8.0;           // 台阶门槛 8.0cm
+        // 核心阈值 (3.0cm)
+        const THRESHOLD_DANGER_CM = 3.0;        
+        const THRESHOLD_SPEEDBUMP_MIN_CM = 2.5; 
+        const THRESHOLD_CURB_CM = 7.0;          
 
         let cntDepression = 0;
         let cntSpeedBump = 0;
@@ -132,10 +202,19 @@
         let cntCurb = 0;
         let logRecords = [];
 
-        // 首波相位锁定跟踪器
-        let activeEvent = null; // { phase: 'BUMP' | 'DEPRESSION', maxVal: 0, startTime: 0 }
+        // 状态机与双峰探测
+        let activeEvent = null;
         let lastReportedTime = 0;
         let warmupUntil = 0;
+        let recentBumpPeaks = []; // 记录近 600ms 内的波峰，用于轴距双峰拟合
+
+        // Leaflet 地图状态
+        let map = null;
+        let userMarker = null;
+        let accuracyCircle = null;
+        let riskMarkersLayer = null;
+        let trajectoryPolyline = null;
+        let autoFollowMap = true; // 视角自动跟随
 
         const HISTORY_LEN = 70;
         let waveHistory = new Array(HISTORY_LEN).fill(0);
@@ -146,13 +225,128 @@
         cvs.height = cvs.clientHeight * window.devicePixelRatio;
         ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
 
+        // ==================== 地图初始化与渲染加固 ====================
+        function initLeafletMap() {
+            if (map) {
+                map.invalidateSize();
+                return;
+            }
+            const initialLat = 23.053741;
+            const initialLng = 113.395804;
+
+            map = L.map('map', { zoomControl: false, attributionControl: false }).setView([initialLat, initialLng], 16);
+            
+            // 官方高德极速免 Key 瓦片源
+            L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}', {
+                subdomains: ['1', '2', '3', '4'],
+                maxZoom: 18,
+                minZoom: 3
+            }).addTo(map);
+
+            // 轨迹折线 (淡蓝霓虹色)
+            trajectoryPolyline = L.polyline([], {
+                color: '#38bdf8',
+                weight: 3,
+                opacity: 0.85,
+                dashArray: '5, 5'
+            }).addTo(map);
+
+            riskMarkersLayer = L.layerGroup().addTo(map);
+
+            // 延迟 200ms 执行重绘，彻底解决手机端首次加载灰屏问题
+            setTimeout(() => { if (map) map.invalidateSize(); }, 200);
+        }
+
+        function updateGpsOnMap(gcjLat, gcjLng, accuracyMeters) {
+            if (!map) initLeafletMap();
+            const pos = [gcjLat, gcjLng];
+
+            if (!userMarker) {
+                userMarker = L.circleMarker(pos, {
+                    radius: 7,
+                    fillColor: '#38bdf8',
+                    color: '#ffffff',
+                    weight: 2,
+                    opacity: 1,
+                    fillOpacity: 0.95
+                }).addTo(map).bindPopup("<b>当前巡检骑手位置 (已纠偏)</b>");
+
+                accuracyCircle = L.circle(pos, {
+                    radius: accuracyMeters || 15,
+                    fillColor: '#0284c7',
+                    color: '#38bdf8',
+                    weight: 1,
+                    opacity: 0.5,
+                    fillOpacity: 0.15
+                }).addTo(map);
+
+                map.setView(pos, 17);
+            } else {
+                userMarker.setLatLng(pos);
+                if (accuracyCircle) {
+                    accuracyCircle.setLatLng(pos);
+                    accuracyCircle.setRadius(accuracyMeters || 15);
+                }
+                // 动态追加轨迹
+                trajectoryPolyline.addLatLng(pos);
+                // 平滑自动跟随视角
+                if (autoFollowMap) {
+                    map.panTo(pos, { animate: true, duration: 0.5 });
+                }
+            }
+        }
+
+        function addRiskMarkerToMap(record) {
+            if (!map || !record.gcjLat || record.gcjLat === 0) return;
+            const pos = [record.gcjLat, record.gcjLng];
+            
+            const marker = L.circleMarker(pos, {
+                radius: 8,
+                fillColor: record.themeColor,
+                color: '#ffffff',
+                weight: 2,
+                opacity: 1,
+                fillOpacity: 0.9
+            }).addTo(riskMarkersLayer);
+
+            marker.bindPopup(`
+                <div style="color:#0f172a; font-size:12px; line-height:1.4;">
+                    <b style="color:${record.themeColor === '#facc15' ? '#b45309' : record.themeColor}; font-size:13px;">${record.type}</b><br>
+                    <b>形变尺寸:</b> ${record.depth} cm<br>
+                    <b>瞬时车速:</b> ${record.speed} km/h<br>
+                    <b>记录时间:</b> ${record.time}<br>
+                    <b>派单建议:</b> ${record.dispatch}
+                </div>
+            `);
+        }
+
+        function toggleAutoFollow() {
+            autoFollowMap = !autoFollowMap;
+            const btn = document.getElementById('btn-follow');
+            if (autoFollowMap) {
+                btn.className = "map-btn map-btn-active";
+                btn.innerText = "视角跟随: ON";
+                recenterMap();
+            } else {
+                btn.className = "map-btn";
+                btn.innerText = "视角跟随: OFF";
+            }
+        }
+
+        function recenterMap() {
+            if (map && userMarker) {
+                map.setView(userMarker.getLatLng(), 17);
+                map.invalidateSize();
+            }
+        }
+
         function drawCanvas(val) {
             waveHistory.push(val);
             waveHistory.shift();
 
             const w = cvs.clientWidth, h = cvs.clientHeight;
             const midY = h / 2;
-            const scale = 8.5;
+            const scale = 11.0;
 
             ctx.clearRect(0, 0, w, h);
 
@@ -160,7 +354,7 @@
             ctx.lineWidth = 1;
             ctx.beginPath(); ctx.moveTo(0, midY); ctx.lineTo(w, midY); ctx.stroke();
 
-            // 门槛线
+            // 3.0cm 虚线
             ctx.strokeStyle = '#ef4444';
             ctx.setLineDash([4, 4]);
             ctx.beginPath();
@@ -181,6 +375,7 @@
             ctx.stroke();
         }
 
+        // ==================== 核心动力学与状态机加固 ====================
         function onDeviceMotion(e) {
             if (!isRunning) return;
             const acc = e.accelerationIncludingGravity;
@@ -194,19 +389,20 @@
                     baseMag = Math.sqrt(baseX * baseX + baseY * baseY + baseZ * baseZ) || 9.8;
                     isCalibrating = false;
                     warmupUntil = Date.now() + 800;
-                    document.getElementById('alert-banner').innerText = "✅ 首波锁定模型就绪，巡检中";
+                    document.getElementById('alert-banner').innerText = "✅ 首波锁定与看门狗就绪，巡检中";
                     document.getElementById('alert-banner').className = "";
                     document.getElementById('val-type').innerText = "平稳";
                 }
                 return;
             }
 
-            // 向量差分计算
             const dx = acc.x - baseX, dy = acc.y - baseY, dz = acc.z - baseZ;
             const rawDeltaA = (dx * baseX + dy * baseY + dz * baseZ) / baseMag;
 
-            // 【核心修正点】：加入 polaritySign 极性翻转因子，确保顶起为正(+)，失重下坠为负(-)
-            const spd = Math.max(currentGps.speed, 3.0);
+            // 速度动力学归一化折算
+            let effectiveSpeed = currentGps.speed;
+            if (isDemoMode && effectiveSpeed <= 1.0) effectiveSpeed = 12.0; // 演示模式默认模拟车速
+            const spd = Math.max(effectiveSpeed, 3.0);
             const speedFactor = 1.0 + 0.065 * spd; 
             const realDisplacementCm = polaritySign * (rawDeltaA / (6.5 * speedFactor));
 
@@ -215,87 +411,92 @@
             const now = Date.now();
             if (now < warmupUntil) return;
 
-            // ==================== 首波相位锁死状态机 (First-Break Lock) ====================
-            // 1. 如果当前没有处于事件窗口中，检测首波冲破阈值方向
+            // 清理 600ms 之前的历史波峰缓存
+            recentBumpPeaks = recentBumpPeaks.filter(p => now - p.time <= 600);
+
+            // ==================== 事件状态机与 Watchdog 保护 ====================
             if (!activeEvent) {
-                if (now - lastReportedTime > 500) {
+                if (now - lastReportedTime > 400) {
                     if (realDisplacementCm >= THRESHOLD_SPEEDBUMP_MIN_CM) {
-                        // 【首波向上冲顶】-> 锁定为凸起/减速带类事件，拒绝后续回弹被判成暗坑
                         activeEvent = {
                             phase: 'BUMP',
                             maxVal: realDisplacementCm,
                             startTime: now,
-                            speed: currentGps.speed
+                            speed: effectiveSpeed
                         };
                     } else if (realDisplacementCm <= -THRESHOLD_DANGER_CM) {
-                        // 【首波向下下坠】-> 锁定为凹陷/暗坑类事件，拒绝后续回弹被判成减速带
                         activeEvent = {
                             phase: 'DEPRESSION',
                             maxVal: Math.abs(realDisplacementCm),
                             startTime: now,
-                            speed: currentGps.speed
+                            speed: effectiveSpeed
                         };
                     }
                 }
             } else {
-                // 2. 事件进行中：跟踪首波方向的最大峰值，并在波形回归基线后结算
-                if (activeEvent.phase === 'BUMP') {
-                    if (realDisplacementCm > activeEvent.maxVal) {
-                        activeEvent.maxVal = realDisplacementCm;
-                    }
-                } else if (activeEvent.phase === 'DEPRESSION') {
-                    if (Math.abs(realDisplacementCm) > activeEvent.maxVal) {
-                        activeEvent.maxVal = Math.abs(realDisplacementCm);
-                    }
+                // 跟踪峰值
+                if (activeEvent.phase === 'BUMP' && realDisplacementCm > activeEvent.maxVal) {
+                    activeEvent.maxVal = realDisplacementCm;
+                } else if (activeEvent.phase === 'DEPRESSION' && Math.abs(realDisplacementCm) > activeEvent.maxVal) {
+                    activeEvent.maxVal = Math.abs(realDisplacementCm);
                 }
 
-                // 冲击持续约 180~350ms 后回归结算
-                if (now - activeEvent.startTime > 220 && Math.abs(realDisplacementCm) < 1.5) {
-                    finalizeEvent(activeEvent);
+                const elapsed = now - activeEvent.startTime;
+                const isDecayed = Math.abs(realDisplacementCm) < 1.3;
+
+                // 【核心改进】：看门狗（Watchdog）硬性截断机制
+                // 满足衰减(>180ms && isDecayed) 或 强制超时(>450ms) 立即终结结算，杜绝粗糙路面卡死！
+                if ((elapsed > 180 && isDecayed) || elapsed > 450) {
+                    finalizeEvent(activeEvent, now);
                     activeEvent = null;
                     lastReportedTime = now;
                 }
             }
         }
 
-        // 最终结算：由首波性质唯一决定分类
-        function finalizeEvent(ev) {
+        // ==================== 智能判定与轴距双峰特征匹配 ====================
+        function finalizeEvent(ev, now) {
             const valStr = ev.maxVal.toFixed(1);
-            const isCurbSpeed = ev.speed <= 6.0;
+            const isCurbSpeed = !isDemoMode && ev.speed <= 6.0;
 
             if (ev.phase === 'BUMP') {
-                // 首波为凸起
                 document.getElementById('val-depth').innerText = `+${valStr} cm`;
-                
+
+                // 检查轴距时滞双峰：过去 160ms ~ 520ms 是否有前驱波峰
+                const hasDoublePeak = recentBumpPeaks.some(p => {
+                    const dt = now - p.time;
+                    return dt >= 160 && dt <= 520 && Math.abs(p.height - ev.maxVal) < 3.5;
+                });
+                recentBumpPeaks.push({ time: now, height: ev.maxVal });
+
                 if (isCurbSpeed && ev.maxVal >= THRESHOLD_CURB_CM) {
-                    // 上马路牙子
                     cntCurb++;
                     document.getElementById('val-type').innerText = "上马路牙子";
                     document.getElementById('val-type').className = "card-sub curb-color";
                     document.getElementById('alert-banner').className = "alert-curb";
                     document.getElementById('alert-banner').innerText = `🚲 识别到上马路牙子！高度: ${valStr} cm [已剔除]`;
-                    saveEventWithWaveform("上马路牙子", `+${valStr}`, "否(正常台阶过渡)", "#c084fc");
-                } else if (ev.maxVal >= THRESHOLD_SPEEDBUMP_MIN_CM && ev.maxVal <= 7.0 && ev.speed <= 22.0) {
-                    // 【标准减速带】-> 首波顶起，高度在 2.5~7cm 之间
+                    saveEventWithWaveform("上马路牙子", `+${valStr}`, "否(台阶过渡)", "#c084fc");
+                } else if (hasDoublePeak || (ev.maxVal >= THRESHOLD_SPEEDBUMP_MIN_CM && ev.maxVal <= 6.0 && ev.speed <= 22.0)) {
+                    // 【标准减速带】：双峰匹配成功 或 符合标准平滑圆弧
                     cntSpeedBump++;
                     document.getElementById('cnt-speedbump').innerText = `${cntSpeedBump} 处`;
-                    document.getElementById('val-type').innerText = "标准减速带";
+                    const label = hasDoublePeak ? "减速带(双峰匹配)" : "标准减速带";
+                    document.getElementById('val-type').innerText = label;
                     document.getElementById('val-type').className = "card-sub speedbump-color";
                     
                     const banner = document.getElementById('alert-banner');
                     banner.className = "alert-speedbump";
-                    banner.innerText = `🚧 识别到标准减速带！高度: +${valStr} cm (合规设施)`;
-                    saveEventWithWaveform("标准减速带", `+${valStr}`, "否(合规市政设施)", "#facc15");
-                } else if (ev.maxVal > 7.0) {
+                    banner.innerText = `🚧 识别到标准减速带！高度: +${valStr} cm ${hasDoublePeak ? '(双峰匹配)' : ''}`;
+                    saveEventWithWaveform(label, `+${valStr}`, "否(合规市政设施)", "#facc15");
+                } else if (ev.maxVal > 6.0) {
                     cntSharpBump++;
                     document.getElementById('val-type').innerText = "突发路面障碍";
                     document.getElementById('val-type').className = "card-sub bump-color";
                     document.getElementById('alert-banner').className = "alert-bump";
-                    document.getElementById('alert-banner').innerText = `⚠️ 发现生硬超高障碍！高度: +${valStr} cm [需排查]`;
-                    saveEventWithWaveform("危险凸起", `+${valStr}`, "是(需排查)", "#fb923c");
+                    document.getElementById('alert-banner').innerText = `⚠️ 发现生硬突发凸起！高度: +${valStr} cm [需排查]`;
+                    saveEventWithWaveform("突发凸起", `+${valStr}`, "是(需排查)", "#fb923c");
                 }
             } else if (ev.phase === 'DEPRESSION') {
-                // 首波为凹陷
                 document.getElementById('val-depth').innerText = `-${valStr} cm`;
 
                 if (isCurbSpeed && ev.maxVal >= THRESHOLD_CURB_CM) {
@@ -306,7 +507,6 @@
                     document.getElementById('alert-banner').innerText = `🚲 识别到下马路牙子！落差: ${valStr} cm [已智能剔除]`;
                     saveEventWithWaveform("下马路牙子", `-${valStr}`, "否(台阶跌落)", "#c084fc");
                 } else if (ev.maxVal >= THRESHOLD_DANGER_CM) {
-                    // 【真实暗坑】
                     cntDepression++;
                     document.getElementById('cnt-depression').innerText = `${cntDepression} 处`;
                     document.getElementById('val-type').innerText = "严重暗坑";
@@ -320,14 +520,28 @@
             }
         }
 
+        // ==================== 模式切换与数据持久化 ====================
+        function toggleWorkMode() {
+            isDemoMode = !isDemoMode;
+            const btn = document.getElementById('btn-workmode');
+            if (isDemoMode) {
+                btn.innerText = "当前模式: 【路演模拟(车速模拟)】";
+                btn.style.color = "#f59e0b";
+                document.getElementById('val-speed').innerText = "12.0 km/h (模拟)";
+            } else {
+                btn.innerText = "当前模式: 【实地骑行】";
+                btn.style.color = "#94a3b8";
+            }
+        }
+
         function togglePolarity() {
             polaritySign = -polaritySign;
             const btn = document.getElementById('btn-invert');
             if (polaritySign === -1) {
-                btn.innerText = "极性保护: 当前【正向(顶起为正)】，点击可手动反转";
+                btn.innerText = "极性: 【顶起为正】";
                 btn.style.color = "#94a3b8";
             } else {
-                btn.innerText = "极性保护: 当前【反向(已倒置)】，点击恢复正向";
+                btn.innerText = "极性: 【反向倒置】";
                 btn.style.color = "#f59e0b";
             }
         }
@@ -340,7 +554,9 @@
                 depth: depthStr,
                 lat: currentGps.lat,
                 lng: currentGps.lng,
-                speed: currentGps.speed ? currentGps.speed.toFixed(1) : "0.0",
+                gcjLat: currentGcjGps.lat,
+                gcjLng: currentGcjGps.lng,
+                speed: currentGps.speed ? currentGps.speed.toFixed(1) : (isDemoMode ? "12.0" : "0.0"),
                 dispatch: needRepair,
                 themeColor: themeColor,
                 waveSnapshot: [...waveHistory]
@@ -348,7 +564,13 @@
 
             logRecords.unshift(record);
             renderLogListView();
+            addRiskMarkerToMap(record);
             
+            // 本地缓存保护
+            try {
+                localStorage.setItem('ROADAURA_SAVED_LOGS', JSON.stringify(logRecords.slice(0, 50)));
+            } catch (e) {}
+
             document.getElementById('btn-export-csv').style.display = "block";
             document.getElementById('btn-export-img').style.display = "block";
         }
@@ -372,6 +594,35 @@
             });
         }
 
+        function clearSavedData() {
+            if (!confirm("确认清空所有历史数据和地图打点吗？")) return;
+            logRecords = [];
+            localStorage.removeItem('ROADAURA_SAVED_LOGS');
+            if (riskMarkersLayer) riskMarkersLayer.clearLayers();
+            if (trajectoryPolyline) trajectoryPolyline.setLatLngs([]);
+            renderLogListView();
+            document.getElementById('cnt-depression').innerText = "0 处";
+            document.getElementById('cnt-speedbump').innerText = "0 处";
+            document.getElementById('btn-export-csv').style.display = "none";
+            document.getElementById('btn-export-img').style.display = "none";
+        }
+
+        function loadCachedData() {
+            try {
+                const cached = localStorage.getItem('ROADAURA_SAVED_LOGS');
+                if (cached) {
+                    logRecords = JSON.parse(cached);
+                    renderLogListView();
+                    logRecords.forEach(r => addRiskMarkerToMap(r));
+                    if (logRecords.length > 0) {
+                        document.getElementById('btn-export-csv').style.display = "block";
+                        document.getElementById('btn-export-img').style.display = "block";
+                    }
+                }
+            } catch (e) {}
+        }
+
+        // ==================== 诊断报告生成与导出 ====================
         function generateWaveformCanvas(record) {
             const offCvs = document.createElement('canvas');
             const w = 720, h = 420;
@@ -383,7 +634,7 @@
             g.fillStyle = '#1f2937'; g.fillRect(0, 70, w, 1);
 
             g.font = 'bold 18px sans-serif'; g.fillStyle = '#38bdf8';
-            g.fillText(`RoadAura 路况听诊器 · 首波锁定诊断报告 #${record.id}`, 20, 30);
+            g.fillText(`RoadAura 路况听诊器 · GIS风险图谱诊断报告 #${record.id}`, 20, 30);
 
             g.font = '13px sans-serif'; g.fillStyle = record.themeColor;
             g.fillText(`● 判定类别: ${record.type} (估算尺寸: ${record.depth} cm)`, 20, 52);
@@ -393,7 +644,7 @@
 
             const chartTop = 90, chartBottom = 380;
             const midY = chartTop + (chartBottom - chartTop) / 2;
-            const scale = 18.0;
+            const scale = 22.0;
 
             g.strokeStyle = '#1e293b'; g.lineWidth = 1;
             for(let y = chartTop; y <= chartBottom; y += 35) {
@@ -405,11 +656,11 @@
             g.fillStyle = '#64748b'; g.font = '11px monospace'; g.fillText('0cm 基准', 5, midY + 4);
 
             g.strokeStyle = '#ef4444'; g.setLineDash([5, 5]);
-            g.beginPath(); g.moveTo(40, midY - 4.0 * scale); g.lineTo(w - 20, midY - 4.0 * scale); g.stroke();
-            g.fillStyle = '#ef4444'; g.fillText('+4.0cm', 5, midY - 4.0 * scale + 4);
+            g.beginPath(); g.moveTo(40, midY - 3.0 * scale); g.lineTo(w - 20, midY - 3.0 * scale); g.stroke();
+            g.fillStyle = '#ef4444'; g.fillText('+3.0cm', 5, midY - 3.0 * scale + 4);
 
-            g.beginPath(); g.moveTo(40, midY + 4.0 * scale); g.lineTo(w - 20, midY + 4.0 * scale); g.stroke();
-            g.fillText('-4.0cm', 5, midY + 4.0 * scale + 4);
+            g.beginPath(); g.moveTo(40, midY + 3.0 * scale); g.lineTo(w - 20, midY + 3.0 * scale); g.stroke();
+            g.fillText('-3.0cm', 5, midY + 3.0 * scale + 4);
             g.setLineDash([]);
 
             const wave = record.waveSnapshot;
@@ -423,7 +674,7 @@
             g.stroke();
 
             g.font = '11px monospace'; g.fillStyle = '#64748b';
-            g.fillText(`GPS 坐标: [${record.lat}, ${record.lng}]  |  已启用首波相位解耦锁死算法  |  清华大创意挑战赛`, 45, 405);
+            g.fillText(`GPS [WGS84]: ${record.lat}, ${record.lng}  |  高德GCJ02已对齐  |  清华大创意挑战赛项目组`, 45, 405);
             return offCvs;
         }
 
@@ -434,7 +685,7 @@
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `首波锁定诊断图_#${record.id}_${Date.now()}.png`;
+                a.download = `波形诊断图_#${record.id}_${Date.now()}.png`;
                 a.click();
                 URL.revokeObjectURL(url);
             });
@@ -462,6 +713,7 @@
                 document.getElementById('btn-start').innerText = "停止路况监测";
                 document.getElementById('btn-start').style.background = "#e11d48";
 
+                initLeafletMap();
                 window.addEventListener('devicemotion', onDeviceMotion);
                 startGpsTracking();
             } else {
@@ -480,14 +732,30 @@
             if ("geolocation" in navigator) {
                 gpsWatchId = navigator.geolocation.watchPosition(
                     (pos) => {
-                        const lat = pos.coords.latitude.toFixed(6);
-                        const lng = pos.coords.longitude.toFixed(6);
+                        const rawLat = pos.coords.latitude;
+                        const rawLng = pos.coords.longitude;
                         const rawSpd = pos.coords.speed !== null && pos.coords.speed > 0 ? (pos.coords.speed * 3.6) : 0.0;
-                        currentGps = { lat: lat, lng: lng, speed: rawSpd };
-                        document.getElementById('val-gps').innerText = `${lat}, ${lng}`;
-                        document.getElementById('val-speed').innerText = `${rawSpd.toFixed(1)} km/h`;
+                        const accuracy = pos.coords.accuracy || 10;
+
+                        const gcjCoord = wgs84ToGcj02(rawLng, rawLat);
+                        currentGcjGps = { lng: gcjCoord[0], lat: gcjCoord[1] };
+
+                        currentGps = { 
+                            lat: rawLat.toFixed(6), 
+                            lng: rawLng.toFixed(6), 
+                            speed: rawSpd,
+                            accuracy: accuracy.toFixed(0)
+                        };
+
+                        if (!isDemoMode) {
+                            document.getElementById('val-speed').innerText = `${rawSpd.toFixed(1)} km/h`;
+                        }
+                        document.getElementById('val-gps').innerText = `精度: ±${accuracy.toFixed(0)}m`;
+                        updateGpsOnMap(currentGcjGps.lat, currentGcjGps.lng, accuracy);
                     },
-                    (err) => { document.getElementById('val-gps').innerText = "室内无GPS信号"; },
+                    (err) => { 
+                        document.getElementById('val-gps').innerText = "室内无GPS信号"; 
+                    },
                     { enableHighAccuracy: true, maximumAge: 1000, timeout: 5000 }
                 );
             }
@@ -495,17 +763,22 @@
 
         function exportCsvData() {
             if (logRecords.length === 0) { alert("尚未记录到数据！"); return; }
-            let csv = "\uFEFF事件编号,记录时间,甄别类型,估算尺寸(cm),纬度,经度,车速(km/h),是否派单\n";
+            let csv = "\uFEFF事件编号,记录时间,甄别类型,估算尺寸(cm),WGS84_纬度,WGS84_经度,高德GCJ02_纬度,高德GCJ02_经度,车速(km/h),是否派单\n";
             logRecords.forEach(r => {
-                csv += `${r.id},${r.time},${r.type},${r.depth},${r.lat},${r.lng},${r.speed},${r.dispatch}\n`;
+                csv += `${r.id},${r.time},${r.type},${r.depth},${r.lat},${r.lng},${r.gcjLat.toFixed(6)},${r.gcjLng.toFixed(6)},${r.speed},${r.dispatch}\n`;
             });
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `路况感知明细_${Date.now()}.csv`;
+            a.download = `路况GIS明细_已纠偏_${Date.now()}.csv`;
             a.click();
         }
+
+        window.onload = () => {
+            initLeafletMap();
+            loadCachedData(); // 恢复历史打点
+        };
     </script>
 </body>
 </html>
