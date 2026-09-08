@@ -1,0 +1,229 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title></title>
+  <meta name="Generator" content="Cocoa HTML Writer">
+  <meta name="CocoaVersion" content="2685.7">
+  <style type="text/css">
+    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica}
+    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; min-height: 14.0px}
+  </style>
+</head>
+<body>
+<p class="p1">&lt;!DOCTYPE html&gt;</p>
+<p class="p1">&lt;html lang="zh-CN"&gt;</p>
+<p class="p1">&lt;head&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;meta charset="UTF-8"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;title&gt;RoadAura - 路况听诊器采集终端&lt;/title&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;style&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>* { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>body { background: #0f172a; color: #f8fafc; padding: 16px; display: flex; flex-direction: column; height: 100vh; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.header { text-align: center; margin-bottom: 12px; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.header h1 { font-size: 1.25rem; color: #38bdf8; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.header p { font-size: 0.8rem; color: #94a3b8; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.dashboard { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.card { background: #1e293b; padding: 10px; border-radius: 8px; border: 1px solid #334155; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.card-title { font-size: 0.75rem; color: #94a3b8; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.card-value { font-size: 1.1rem; font-weight: bold; margin-top: 4px; color: #f1f5f9; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>#status-box { padding: 8px; border-radius: 6px; text-align: center; font-size: 0.85rem; margin-bottom: 8px; background: #334155; color: #cbd5e1; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.warning { background: #dc2626 !important; color: white !important; font-weight: bold; animation: blink 0.3s infinite alternate; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>@keyframes blink { from { opacity: 1; } to { opacity: 0.7; } }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>canvas { width: 100%; height: 140px; background: #020617; border-radius: 8px; border: 1px solid #1e293b; margin-bottom: 12px; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.btn-group { display: flex; gap: 8px; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>button { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: bold; font-size: 0.9rem; cursor: pointer; transition: 0.2s; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>#btn-start { background: #0284c7; color: white; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>#btn-export { background: #10b981; color: white; display: none; }</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/style&gt;</p>
+<p class="p1">&lt;/head&gt;</p>
+<p class="p1">&lt;body&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="header"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;h1&gt;车轮上的路况听诊器 (Demo)&lt;/h1&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;p&gt;清华创意大赛 · 边缘数据采集节点&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div id="status-box"&gt;点击下方按钮授权并开启采集&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="dashboard"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="card"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="card-title"&gt;Z轴垂直冲击 (m/s²)&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="card-value" id="val-z"&gt;0.00&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="card"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="card-title"&gt;车速 (km/h)&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="card-value" id="val-speed"&gt;0.0&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="card"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="card-title"&gt;GPS 坐标&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="card-value" id="val-gps" style="font-size: 0.8rem;"&gt;未定位&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="card"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="card-title"&gt;已标记疑似暗坑&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="card-value" id="val-count" style="color: #f59e0b;"&gt;0 处&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;canvas id="waveform"&gt;&lt;/canvas&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="btn-group"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;button id="btn-start"&gt;开始采集 (需授权)&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;button id="btn-export"&gt;导出实测 CSV 数据&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;script&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>let isRecording = false;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>let dataLog = [];</p>
+<p class="p1"><span class="Apple-converted-space">        </span>let potholeCount = 0;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>let currentGps = { lat: 0, lng: 0, speed: 0 };</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>// 阈值设定（超过此阈值判定为剧烈颠簸/暗坑）</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const POTHOLE_THRESHOLD = 15.0; // Z轴冲击阈值 (m/s^2)</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const waveHistory = new Array(60).fill(0);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>const canvas = document.getElementById('waveform');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const ctx = canvas.getContext('2d');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>canvas.width = canvas.clientWidth;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>canvas.height = canvas.clientHeight;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>// 绘制实时波形</p>
+<p class="p1"><span class="Apple-converted-space">        </span>function drawWaveform(newVal) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>waveHistory.push(newVal);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>waveHistory.shift();</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>ctx.clearRect(0, 0, canvas.width, canvas.height);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>ctx.strokeStyle = '#38bdf8';</p>
+<p class="p1"><span class="Apple-converted-space">            </span>ctx.lineWidth = 2;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>ctx.beginPath();</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>const step = canvas.width / (waveHistory.length - 1);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const midY = canvas.height / 2;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>for (let i = 0; i &lt; waveHistory.length; i++) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>// 将震动值映射到画布高度</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const y = midY - (waveHistory[i] * 3);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>if (i === 0) ctx.moveTo(0, y);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>else ctx.lineTo(i * step, y);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p1"><span class="Apple-converted-space">            </span>ctx.stroke();</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>// 绘制安全阈值红线</p>
+<p class="p1"><span class="Apple-converted-space">            </span>ctx.strokeStyle = '#ef4444';</p>
+<p class="p1"><span class="Apple-converted-space">            </span>ctx.setLineDash([4, 4]);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>ctx.beginPath();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>ctx.moveTo(0, midY - (POTHOLE_THRESHOLD * 3));</p>
+<p class="p1"><span class="Apple-converted-space">            </span>ctx.lineTo(canvas.width, midY - (POTHOLE_THRESHOLD * 3));</p>
+<p class="p1"><span class="Apple-converted-space">            </span>ctx.stroke();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>ctx.setLineDash([]);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>// 传感器处理核心逻辑</p>
+<p class="p1"><span class="Apple-converted-space">        </span>function handleMotion(event) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (!isRecording) return;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>// 获取线性加速度（若浏览器不支持纯线性，则取带重力加速度）</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const acc = event.acceleration &amp;&amp; event.acceleration.z !== null<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                        </span>? event.acceleration<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                        </span>: event.accelerationIncludingGravity;</p>
+<p class="p2"><span class="Apple-converted-space">            </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>const zVal = Math.abs(acc.z || 0);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>document.getElementById('val-z').innerText = zVal.toFixed(2);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>drawWaveform(zVal);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>// 判定是否触发坑洼</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const statusBox = document.getElementById('status-box');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (zVal &gt; POTHOLE_THRESHOLD) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>statusBox.className = 'warning';</p>
+<p class="p1"><span class="Apple-converted-space">                </span>statusBox.innerText = '⚠️ 检测到剧烈路面冲击（疑似暗坑）！';</p>
+<p class="p1"><span class="Apple-converted-space">                </span>potholeCount++;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>document.getElementById('val-count').innerText = `${potholeCount} 处`;</p>
+<p class="p2"><span class="Apple-converted-space">                </span></p>
+<p class="p1"><span class="Apple-converted-space">                </span>// 记录异常点数据</p>
+<p class="p1"><span class="Apple-converted-space">                </span>dataLog.push({</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>time: new Date().toISOString(),</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>lat: currentGps.lat,</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>lng: currentGps.lng,</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>speed: currentGps.speed,</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>impact_z: zVal.toFixed(2),</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>type: 'Pothole_Alert'</p>
+<p class="p1"><span class="Apple-converted-space">                </span>});</p>
+<p class="p1"><span class="Apple-converted-space">            </span>} else {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>statusBox.className = '';</p>
+<p class="p1"><span class="Apple-converted-space">                </span>statusBox.innerText = '正在平稳巡检路况...';</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>// GPS 定位跟踪</p>
+<p class="p1"><span class="Apple-converted-space">        </span>function trackGps() {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (navigator.geolocation) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>navigator.geolocation.watchPosition((pos) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>currentGps.lat = pos.coords.latitude.toFixed(6);</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>currentGps.lng = pos.coords.longitude.toFixed(6);</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>currentGps.speed = pos.coords.speed ? (pos.coords.speed * 3.6).toFixed(1) : 0.0;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                    </span>document.getElementById('val-gps').innerText = `${currentGps.lat}, ${currentGps.lng}`;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>document.getElementById('val-speed').innerText = currentGps.speed;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>}, (err) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>console.warn("GPS 获取受限或处于室内", err);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>}, { enableHighAccuracy: true });</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>// 启动/授权采集</p>
+<p class="p1"><span class="Apple-converted-space">        </span>async function startCollector() {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>// iOS 13+ 特别授权流程</p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (typeof DeviceMotionEvent !== 'undefined' &amp;&amp; typeof DeviceMotionEvent.requestPermission === 'function') {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>try {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>const state = await DeviceMotionEvent.requestPermission();</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>if (state !== 'granted') {</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>alert('需要传感器权限方可采集！');</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>return;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>} catch (e) {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>console.error(e);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>}</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>isRecording = !isRecording;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const btn = document.getElementById('btn-start');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (isRecording) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>window.addEventListener('devicemotion', handleMotion);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>trackGps();</p>
+<p class="p1"><span class="Apple-converted-space">                </span>btn.innerText = '停止采集';</p>
+<p class="p1"><span class="Apple-converted-space">                </span>btn.style.background = '#e11d48';</p>
+<p class="p1"><span class="Apple-converted-space">                </span>document.getElementById('btn-export').style.display = 'block';</p>
+<p class="p1"><span class="Apple-converted-space">            </span>} else {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>window.removeEventListener('devicemotion', handleMotion);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>btn.innerText = '继续采集';</p>
+<p class="p1"><span class="Apple-converted-space">                </span>btn.style.background = '#0284c7';</p>
+<p class="p1"><span class="Apple-converted-space">                </span>document.getElementById('status-box').innerText = '采集已暂停';</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>// 导出 CSV 文件（用于论文/PPT作图）</p>
+<p class="p1"><span class="Apple-converted-space">        </span>function exportCsv() {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (dataLog.length === 0) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>alert('当前未记录到颠簸数据，骑车压过几个坎后再试！');</p>
+<p class="p1"><span class="Apple-converted-space">                </span>return;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p1"><span class="Apple-converted-space">            </span>let csvContent = "data:text/csv;charset=utf-8,Time,Latitude,Longitude,Speed_kmh,Impact_Z,Type\n";</p>
+<p class="p1"><span class="Apple-converted-space">            </span>dataLog.forEach(row =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>csvContent += `${row.time},${row.lat},${row.lng},${row.speed},${row.impact_z},${row.type}\n`;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>});</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const encodedUri = encodeURI(csvContent);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const link = document.createElement("a");</p>
+<p class="p1"><span class="Apple-converted-space">            </span>link.setAttribute("href", encodedUri);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>link.setAttribute("download", `road_data_${Date.now()}.csv`);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>document.body.appendChild(link);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>link.click();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>document.body.removeChild(link);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>document.getElementById('btn-start').addEventListener('click', startCollector);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>document.getElementById('btn-export').addEventListener('click', exportCsv);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/script&gt;</p>
+<p class="p1">&lt;/body&gt;</p>
+<p class="p1">&lt;/html&gt;</p>
+</body>
+</html>
