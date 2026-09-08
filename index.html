@@ -3,60 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RoadAura - 动力学校准与路况听诊终端</title>
+    <title>RoadAura - 凹凸路况智能听诊终端</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        body { background: #0b0f19; color: #f3f4f6; padding: 14px; display: flex; flex-direction: column; min-height: 100vh; }
-        h1 { font-size: 1.15rem; color: #38bdf8; text-align: center; margin-top: 4px; }
-        p.sub { font-size: 0.75rem; color: #94a3b8; text-align: center; margin-bottom: 10px; }
+        body { background: #0b0f19; color: #f3f4f6; padding: 12px; display: flex; flex-direction: column; min-height: 100vh; }
+        h1 { font-size: 1.15rem; color: #38bdf8; text-align: center; margin-top: 2px; }
+        p.sub { font-size: 0.72rem; color: #94a3b8; text-align: center; margin-bottom: 8px; }
         
-        #alert-banner { padding: 12px; border-radius: 8px; text-align: center; font-size: 0.85rem; font-weight: bold; margin-bottom: 10px; background: #1e293b; color: #cbd5e1; border: 1px solid #334155; transition: all 0.2s; }
+        #alert-banner { padding: 10px; border-radius: 8px; text-align: center; font-size: 0.85rem; font-weight: bold; margin-bottom: 8px; background: #1e293b; color: #cbd5e1; border: 1px solid #334155; transition: all 0.2s; }
         .alert-depression { background: #991b1b !important; color: #fff !important; border-color: #ef4444 !important; animation: pulse 0.4s infinite alternate; }
         .alert-bump { background: #c2410c !important; color: #fff !important; border-color: #ea580c !important; animation: pulse 0.4s infinite alternate; }
         .alert-speedbump { background: #854d0e !important; color: #fff !important; border-color: #eab308 !important; }
         .alert-curb { background: #4c1d95 !important; color: #ddd6fe !important; border-color: #8b5cf6 !important; }
         @keyframes pulse { from { opacity: 1; } to { opacity: 0.75; } }
 
-        .dashboard { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 10px; }
-        .card { background: #111827; padding: 10px; border-radius: 8px; border: 1px solid #1f2937; }
-        .card-lbl { font-size: 0.7rem; color: #9ca3af; }
-        .card-val { font-size: 1.05rem; font-weight: bold; margin-top: 3px; color: #e5e7eb; }
-        .card-sub { font-size: 0.65rem; color: #64748b; margin-top: 2px; }
+        .dashboard { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; margin-bottom: 8px; }
+        .card { background: #111827; padding: 8px; border-radius: 8px; border: 1px solid #1f2937; }
+        .card-lbl { font-size: 0.65rem; color: #9ca3af; }
+        .card-val { font-size: 1.05rem; font-weight: bold; margin-top: 2px; color: #e5e7eb; }
+        .card-sub { font-size: 0.62rem; color: #64748b; margin-top: 2px; }
         
         .depression-color { color: #f87171 !important; }
         .speedbump-color { color: #facc15 !important; }
         .curb-color { color: #c084fc !important; }
 
-        .canvas-container { position: relative; margin-bottom: 10px; }
-        canvas { width: 100%; height: 140px; background: #030712; border-radius: 8px; border: 1px solid #1f2937; display: block; }
-        .canvas-legend { position: absolute; top: 6px; left: 8px; font-size: 0.65rem; color: #6b7280; display: flex; gap: 8px; }
+        .canvas-container { position: relative; margin-bottom: 8px; }
+        #cvs { width: 100%; height: 130px; background: #030712; border-radius: 8px; border: 1px solid #1f2937; display: block; }
+        .canvas-legend { position: absolute; top: 4px; left: 6px; font-size: 0.62rem; color: #6b7280; display: flex; gap: 6px; }
 
-        .btn-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
-        .btn-row { display: flex; gap: 8px; }
-        button { flex: 1; padding: 11px; border: none; border-radius: 8px; font-weight: bold; font-size: 0.85rem; cursor: pointer; transition: 0.2s; }
+        .btn-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
+        .btn-row { display: flex; gap: 6px; }
+        button { flex: 1; padding: 10px; border: none; border-radius: 8px; font-weight: bold; font-size: 0.82rem; cursor: pointer; transition: 0.2s; }
         #btn-start { background: #0284c7; color: #fff; }
         #btn-export-csv { background: #059669; color: #fff; display: none; }
         #btn-export-img { background: #7c3aed; color: #fff; display: none; }
+        #btn-invert { background: #334155; color: #94a3b8; font-size: 0.7rem; padding: 6px; }
         
-        .log-section { margin-top: 10px; }
-        .log-title { font-size: 0.8rem; color: #94a3b8; font-weight: bold; margin-bottom: 8px; display: flex; justify-content: space-between; }
-        .log-list { display: flex; flex-direction: column; gap: 8px; max-height: 220px; overflow-y: auto; }
-        .log-item { background: #111827; border: 1px solid #1f2937; border-radius: 8px; padding: 9px 12px; display: flex; justify-content: space-between; align-items: center; }
+        .log-section { margin-top: 6px; }
+        .log-title { font-size: 0.75rem; color: #94a3b8; font-weight: bold; margin-bottom: 6px; display: flex; justify-content: space-between; }
+        .log-list { display: flex; flex-direction: column; gap: 6px; max-height: 180px; overflow-y: auto; }
+        .log-item { background: #111827; border: 1px solid #1f2937; border-radius: 6px; padding: 8px 10px; display: flex; justify-content: space-between; align-items: center; }
         .log-item-left { display: flex; flex-direction: column; gap: 2px; }
-        .log-item-type { font-size: 0.85rem; font-weight: bold; }
-        .log-item-meta { font-size: 0.65rem; color: #64748b; }
-        .log-btn-dl { background: #334155; color: #38bdf8; border: none; padding: 5px 10px; border-radius: 5px; font-size: 0.7rem; font-weight: bold; cursor: pointer; }
+        .log-item-type { font-size: 0.8rem; font-weight: bold; }
+        .log-item-meta { font-size: 0.62rem; color: #64748b; }
+        .log-btn-dl { background: #334155; color: #38bdf8; border: none; padding: 4px 8px; border-radius: 4px; font-size: 0.65rem; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
     <h1>车轮上的路况听诊器</h1>
-    <p class="sub">清华大创意挑战赛 · 速度响应归一化与真实尺寸还原</p>
+    <p class="sub">清华大创意挑战赛 · 首波相位锁定与极性修正</p>
 
     <div id="alert-banner">点击下方按钮开启，需平放或固定 1.5 秒自动校准</div>
 
     <div class="dashboard">
         <div class="card">
-            <div class="card-lbl">真实尺寸估算 (已校准)</div>
+            <div class="card-lbl">真实尺寸估算 (首波锁定)</div>
             <div class="card-val" id="val-depth">0.0 cm</div>
             <div class="card-sub" id="val-type">待机</div>
         </div>
@@ -66,42 +67,43 @@
             <div class="card-sub" id="val-gps">未获取定位</div>
         </div>
         <div class="card">
-            <div class="card-lbl">严重暗坑 (≥4.5cm)</div>
-            <div class="card-val depression-color" id="cnt-depression">0 处</div>
-            <div class="card-sub">真实凹陷深度已折算</div>
-        </div>
-        <div class="card">
             <div class="card-lbl">标准减速带 (3~6cm)</div>
             <div class="card-val speedbump-color" id="cnt-speedbump">0 处</div>
-            <div class="card-sub">双峰时滞验证 | 合规设施</div>
+            <div class="card-sub">正向顶起 | 合规设施</div>
+        </div>
+        <div class="card">
+            <div class="card-lbl">严重暗坑 (≥4.0cm)</div>
+            <div class="card-val depression-color" id="cnt-depression">0 处</div>
+            <div class="card-sub">负向下坠 | 需紧急修缮</div>
         </div>
     </div>
 
     <div class="canvas-container">
         <div class="canvas-legend">
-            <span>▲ 上凸</span>
-            <span>▼ 下凹</span>
+            <span>▲ 上凸(+)</span>
+            <span>▼ 下凹(-)</span>
             <span style="color: #facc15;">● 减速带</span>
-            <span style="color: #ef4444;">-- 4.5cm 危险门槛</span>
+            <span style="color: #ef4444;">-- 4.0cm 门槛</span>
         </div>
         <canvas id="cvs"></canvas>
     </div>
 
     <div class="btn-group">
-        <button id="btn-start" onclick="toggleRecord()">开启监测与校准</button>
+        <button id="btn-start" onclick="toggleRecord()">开启路况智能监测</button>
         <div class="btn-row">
             <button id="btn-export-csv" onclick="exportCsvData()">导出数据 CSV</button>
-            <button id="btn-export-img" onclick="exportAllWaveformImages()">导出全部波形图 (PNG)</button>
+            <button id="btn-export-img" onclick="exportAllWaveformImages()">导出波形诊断图</button>
         </div>
+        <button id="btn-invert" onclick="togglePolarity()">极性反相保护: 当前【正向(顶起为正)】，点击可手动反转</button>
     </div>
 
     <div class="log-section">
         <div class="log-title">
             <span>捕获事件记录 (<span id="log-count">0</span>)</span>
-            <span style="font-size:0.65rem; color:#64748b;">支持下载真实尺寸波形图</span>
+            <span style="font-size:0.62rem; color:#64748b;">支持下载真实波形图</span>
         </div>
         <div class="log-list" id="log-list-container">
-            <div style="text-align:center; padding: 20px; font-size:0.75rem; color:#475569;">暂无数据，请骑行测试</div>
+            <div style="text-align:center; padding: 15px; font-size:0.75rem; color:#475569;">暂无数据，请骑行巡检</div>
         </div>
     </div>
 
@@ -113,22 +115,25 @@
         let baseX = 0, baseY = 0, baseZ = 0;
         let baseMag = 9.8;
 
+        // 极性翻转因子（默认为 -1，消除惯性力反相）
+        let polaritySign = -1;
+
         let gpsWatchId = null;
         let currentGps = { lat: "未获取", lng: "未获取", speed: 0.0 };
 
-        // 真实物理门槛（已恢复真实物理单位）
-        const THRESHOLD_SPEEDBUMP_MIN_CM = 2.8; // 减速带下限 2.8cm
-        const THRESHOLD_DANGER_CM = 4.5;         // 危险坑洼/凸起门槛 4.5cm
-        const THRESHOLD_CURB_CM = 8.0;           // 马路牙子门槛 8.0cm
+        // 标定真实物理门槛
+        const THRESHOLD_SPEEDBUMP_MIN_CM = 2.5; // 减速带起步 2.5cm
+        const THRESHOLD_DANGER_CM = 4.0;         // 危险暗坑门槛 4.0cm
+        const THRESHOLD_CURB_CM = 8.0;           // 台阶门槛 8.0cm
 
         let cntDepression = 0;
         let cntSpeedBump = 0;
         let cntSharpBump = 0;
         let cntCurb = 0;
         let logRecords = [];
-        
-        // 减速带双峰候选状态机
-        let pendingFrontPeak = null;
+
+        // 首波相位锁定跟踪器
+        let activeEvent = null; // { phase: 'BUMP' | 'DEPRESSION', maxVal: 0, startTime: 0 }
         let lastReportedTime = 0;
         let warmupUntil = 0;
 
@@ -145,38 +150,29 @@
             waveHistory.push(val);
             waveHistory.shift();
 
-            const w = cvs.clientWidth;
-            const h = cvs.clientHeight;
+            const w = cvs.clientWidth, h = cvs.clientHeight;
             const midY = h / 2;
-            const scale = 9.0; // 适配真实 0~10cm 范围
+            const scale = 8.5;
 
             ctx.clearRect(0, 0, w, h);
 
-            // 零位线
             ctx.strokeStyle = '#334155';
             ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(0, midY);
-            ctx.lineTo(w, midY);
-            ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(0, midY); ctx.lineTo(w, midY); ctx.stroke();
 
-            // 4.5cm 危险门槛虚线
+            // 门槛线
             ctx.strokeStyle = '#ef4444';
             ctx.setLineDash([4, 4]);
             ctx.beginPath();
-            ctx.moveTo(0, midY - THRESHOLD_DANGER_CM * scale);
-            ctx.lineTo(w, midY - THRESHOLD_DANGER_CM * scale);
-            ctx.moveTo(0, midY + THRESHOLD_DANGER_CM * scale);
-            ctx.lineTo(w, midY + THRESHOLD_DANGER_CM * scale);
+            ctx.moveTo(0, midY - THRESHOLD_DANGER_CM * scale); ctx.lineTo(w, midY - THRESHOLD_DANGER_CM * scale);
+            ctx.moveTo(0, midY + THRESHOLD_DANGER_CM * scale); ctx.lineTo(w, midY + THRESHOLD_DANGER_CM * scale);
             ctx.stroke();
             ctx.setLineDash([]);
 
-            // 动态波形
             ctx.strokeStyle = '#38bdf8';
             ctx.lineWidth = 2;
             ctx.beginPath();
             const step = w / (HISTORY_LEN - 1);
-
             for (let i = 0; i < HISTORY_LEN; i++) {
                 const y = midY - (waveHistory[i] * scale);
                 if (i === 0) ctx.moveTo(0, y);
@@ -185,29 +181,11 @@
             ctx.stroke();
         }
 
-        function startGpsTracking() {
-            if ("geolocation" in navigator) {
-                gpsWatchId = navigator.geolocation.watchPosition(
-                    (pos) => {
-                        const lat = pos.coords.latitude.toFixed(6);
-                        const lng = pos.coords.longitude.toFixed(6);
-                        const rawSpd = pos.coords.speed !== null && pos.coords.speed > 0 ? (pos.coords.speed * 3.6) : 0.0;
-                        currentGps = { lat: lat, lng: lng, speed: rawSpd };
-                        document.getElementById('val-gps').innerText = `${lat}, ${lng}`;
-                        document.getElementById('val-speed').innerText = `${rawSpd.toFixed(1)} km/h`;
-                    },
-                    (err) => { document.getElementById('val-gps').innerText = "室内无GPS信号"; },
-                    { enableHighAccuracy: true, maximumAge: 1000, timeout: 5000 }
-                );
-            }
-        }
-
         function onDeviceMotion(e) {
             if (!isRunning) return;
             const acc = e.accelerationIncludingGravity;
             if (!acc || acc.x === null) return;
 
-            // 1. 静态校准
             if (isCalibrating) {
                 baseX += acc.x; baseY += acc.y; baseZ += acc.z;
                 calibCount++;
@@ -216,132 +194,141 @@
                     baseMag = Math.sqrt(baseX * baseX + baseY * baseY + baseZ * baseZ) || 9.8;
                     isCalibrating = false;
                     warmupUntil = Date.now() + 800;
-                    document.getElementById('alert-banner').innerText = "✅ 动力学模型就绪，巡检中";
+                    document.getElementById('alert-banner').innerText = "✅ 首波锁定模型就绪，巡检中";
                     document.getElementById('alert-banner').className = "";
                     document.getElementById('val-type').innerText = "平稳";
                 }
                 return;
             }
 
-            // 2. 向量差分计算
+            // 向量差分计算
             const dx = acc.x - baseX, dy = acc.y - baseY, dz = acc.z - baseZ;
             const rawDeltaA = (dx * baseX + dy * baseY + dz * baseZ) / baseMag;
 
-            // 3. 【核心优化】：两轮车速度归一化反向传递函数
-            // 消除高速下的冲击过冲，将 25~30 m/s^2 的剧烈冲击准确映射回真实 3~5 cm
-            const spd = Math.max(currentGps.speed, 3.0); // 最低速度3km/h防除以0
-            // 速度动力学放大系数：车速每增加 10km/h，冲击放大约 1.6 倍
+            // 【核心修正点】：加入 polaritySign 极性翻转因子，确保顶起为正(+)，失重下坠为负(-)
+            const spd = Math.max(currentGps.speed, 3.0);
             const speedFactor = 1.0 + 0.065 * spd; 
-            const realDisplacementCm = (rawDeltaA / (6.8 * speedFactor));
+            const realDisplacementCm = polaritySign * (rawDeltaA / (6.5 * speedFactor));
 
             drawCanvas(realDisplacementCm);
 
             const now = Date.now();
             if (now < warmupUntil) return;
 
-            // 4. 双峰时滞匹配状态机 (Speed Bump State Machine)
-            if (pendingFrontPeak) {
-                const dt = now - pendingFrontPeak.time;
-                // 在 150ms ~ 550ms 窗口期内检测后轮波峰
-                if (dt >= 150 && dt <= 550) {
+            // ==================== 首波相位锁死状态机 (First-Break Lock) ====================
+            // 1. 如果当前没有处于事件窗口中，检测首波冲破阈值方向
+            if (!activeEvent) {
+                if (now - lastReportedTime > 500) {
                     if (realDisplacementCm >= THRESHOLD_SPEEDBUMP_MIN_CM) {
-                        // 命中前后轮双峰！确认为标准减速带
-                        const avgHeight = ((pendingFrontPeak.height + realDisplacementCm) / 2).toFixed(1);
-                        reportSpeedBump(avgHeight, true);
-                        pendingFrontPeak = null;
-                        return;
-                    }
-                } else if (dt > 550) {
-                    // 超过 550ms 未出现第二峰，结算单峰事件
-                    finalizeSinglePeak(pendingFrontPeak);
-                    pendingFrontPeak = null;
-                }
-            }
-
-            // 5. 初始峰值捕获
-            if (Math.abs(realDisplacementCm) >= THRESHOLD_SPEEDBUMP_MIN_CM && (now - lastReportedTime > 600)) {
-                if (realDisplacementCm > 0) {
-                    // 正向凸起：暂存为候选前轮峰，等待后轮匹配
-                    pendingFrontPeak = {
-                        height: realDisplacementCm,
-                        time: now,
-                        speed: currentGps.speed
-                    };
-                } else {
-                    // 负向下凹（暗坑/跌落）
-                    if (Math.abs(realDisplacementCm) >= THRESHOLD_DANGER_CM) {
-                        evaluateDownwardEvent(Math.abs(realDisplacementCm));
-                        lastReportedTime = now;
+                        // 【首波向上冲顶】-> 锁定为凸起/减速带类事件，拒绝后续回弹被判成暗坑
+                        activeEvent = {
+                            phase: 'BUMP',
+                            maxVal: realDisplacementCm,
+                            startTime: now,
+                            speed: currentGps.speed
+                        };
+                    } else if (realDisplacementCm <= -THRESHOLD_DANGER_CM) {
+                        // 【首波向下下坠】-> 锁定为凹陷/暗坑类事件，拒绝后续回弹被判成减速带
+                        activeEvent = {
+                            phase: 'DEPRESSION',
+                            maxVal: Math.abs(realDisplacementCm),
+                            startTime: now,
+                            speed: currentGps.speed
+                        };
                     }
                 }
-            }
-        }
-
-        // 单峰超时后的归宿裁决
-        function finalizeSinglePeak(peak) {
-            const hStr = peak.height.toFixed(1);
-            const isCurbSpeed = peak.speed <= 6.0;
-
-            if (isCurbSpeed && peak.height >= THRESHOLD_CURB_CM) {
-                // 低速大台阶 -> 上马路牙子
-                cntCurb++;
-                document.getElementById('val-type').innerText = "上马路牙子";
-                document.getElementById('val-type').className = "card-sub curb-color";
-                document.getElementById('alert-banner').className = "alert-curb";
-                document.getElementById('alert-banner').innerText = `🚲 识别到上马路牙子！高度: ${hStr} cm [已智能剔除]`;
-                saveEventWithWaveform("上马路牙子(已剔除)", `+${hStr}`, "否(正常台阶过渡)", "#c084fc");
-            } else if (peak.height <= 6.0 && peak.speed <= 20.0) {
-                // 单侧压过的减速带（单峰）
-                reportSpeedBump(hStr, false);
-            } else if (peak.height >= THRESHOLD_DANGER_CM) {
-                // 高速且生硬单峰 -> 危险凸起
-                cntSharpBump++;
-                document.getElementById('val-type').innerText = "危险路面凸起";
-                document.getElementById('val-type').className = "card-sub bump-color";
-                document.getElementById('alert-banner').className = "alert-bump";
-                document.getElementById('alert-banner').innerText = `⚠️ 发现生硬凸起异物！高度: ${hStr} cm [需排查]`;
-                saveEventWithWaveform("危险路面凸起", `+${hStr}`, "是(需排查)", "#fb923c");
-            }
-            lastReportedTime = Date.now();
-        }
-
-        // 统一上报减速带
-        function reportSpeedBump(heightStr, isDouble) {
-            cntSpeedBump++;
-            document.getElementById('cnt-speedbump').innerText = `${cntSpeedBump} 处`;
-            document.getElementById('val-type').innerText = isDouble ? "减速带(双峰匹配)" : "疑似减速带";
-            document.getElementById('val-type').className = "card-sub speedbump-color";
-            document.getElementById('val-depth').innerText = `+${heightStr} cm`;
-            
-            const banner = document.getElementById('alert-banner');
-            banner.className = "alert-speedbump";
-            banner.innerText = `🚧 识别到标准减速带！高度: ${heightStr} cm ${isDouble ? '(双峰匹配验证)' : ''}`;
-            
-            saveEventWithWaveform("标准减速带", `+${heightStr}`, "否(合规市政设施)", "#facc15");
-            lastReportedTime = Date.now();
-        }
-
-        // 下凹暗坑判定
-        function evaluateDownwardEvent(absDepthVal) {
-            const dStr = absDepthVal.toFixed(1);
-            const banner = document.getElementById('alert-banner');
-            document.getElementById('val-depth').innerText = `-${dStr} cm`;
-
-            if (currentGps.speed <= 6.0 && absDepthVal >= THRESHOLD_CURB_CM) {
-                cntCurb++;
-                document.getElementById('val-type').innerText = "下马路牙子";
-                document.getElementById('val-type').className = "card-sub curb-color";
-                banner.className = "alert-curb";
-                banner.innerText = `🚲 识别到下马路牙子！落差: ${dStr} cm [已智能剔除]`;
-                saveEventWithWaveform("下马路牙子(已剔除)", `-${dStr}`, "否(正常台阶跌落)", "#c084fc");
             } else {
-                cntDepression++;
-                document.getElementById('cnt-depression').innerText = `${cntDepression} 处`;
-                document.getElementById('val-type').innerText = "严重暗坑";
-                document.getElementById('val-type').className = "card-sub depression-color";
-                banner.className = "alert-depression";
-                banner.innerText = `⚠️ 发现严重路面暗坑！深度: ${dStr} cm [需紧急修缮]`;
-                saveEventWithWaveform("严重暗坑(需修缮)", `-${dStr}`, "是(需紧急修缮)", "#ef4444");
+                // 2. 事件进行中：跟踪首波方向的最大峰值，并在波形回归基线后结算
+                if (activeEvent.phase === 'BUMP') {
+                    if (realDisplacementCm > activeEvent.maxVal) {
+                        activeEvent.maxVal = realDisplacementCm;
+                    }
+                } else if (activeEvent.phase === 'DEPRESSION') {
+                    if (Math.abs(realDisplacementCm) > activeEvent.maxVal) {
+                        activeEvent.maxVal = Math.abs(realDisplacementCm);
+                    }
+                }
+
+                // 冲击持续约 180~350ms 后回归结算
+                if (now - activeEvent.startTime > 220 && Math.abs(realDisplacementCm) < 1.5) {
+                    finalizeEvent(activeEvent);
+                    activeEvent = null;
+                    lastReportedTime = now;
+                }
+            }
+        }
+
+        // 最终结算：由首波性质唯一决定分类
+        function finalizeEvent(ev) {
+            const valStr = ev.maxVal.toFixed(1);
+            const isCurbSpeed = ev.speed <= 6.0;
+
+            if (ev.phase === 'BUMP') {
+                // 首波为凸起
+                document.getElementById('val-depth').innerText = `+${valStr} cm`;
+                
+                if (isCurbSpeed && ev.maxVal >= THRESHOLD_CURB_CM) {
+                    // 上马路牙子
+                    cntCurb++;
+                    document.getElementById('val-type').innerText = "上马路牙子";
+                    document.getElementById('val-type').className = "card-sub curb-color";
+                    document.getElementById('alert-banner').className = "alert-curb";
+                    document.getElementById('alert-banner').innerText = `🚲 识别到上马路牙子！高度: ${valStr} cm [已剔除]`;
+                    saveEventWithWaveform("上马路牙子", `+${valStr}`, "否(正常台阶过渡)", "#c084fc");
+                } else if (ev.maxVal >= THRESHOLD_SPEEDBUMP_MIN_CM && ev.maxVal <= 7.0 && ev.speed <= 22.0) {
+                    // 【标准减速带】-> 首波顶起，高度在 2.5~7cm 之间
+                    cntSpeedBump++;
+                    document.getElementById('cnt-speedbump').innerText = `${cntSpeedBump} 处`;
+                    document.getElementById('val-type').innerText = "标准减速带";
+                    document.getElementById('val-type').className = "card-sub speedbump-color";
+                    
+                    const banner = document.getElementById('alert-banner');
+                    banner.className = "alert-speedbump";
+                    banner.innerText = `🚧 识别到标准减速带！高度: +${valStr} cm (合规设施)`;
+                    saveEventWithWaveform("标准减速带", `+${valStr}`, "否(合规市政设施)", "#facc15");
+                } else if (ev.maxVal > 7.0) {
+                    cntSharpBump++;
+                    document.getElementById('val-type').innerText = "突发路面障碍";
+                    document.getElementById('val-type').className = "card-sub bump-color";
+                    document.getElementById('alert-banner').className = "alert-bump";
+                    document.getElementById('alert-banner').innerText = `⚠️ 发现生硬超高障碍！高度: +${valStr} cm [需排查]`;
+                    saveEventWithWaveform("危险凸起", `+${valStr}`, "是(需排查)", "#fb923c");
+                }
+            } else if (ev.phase === 'DEPRESSION') {
+                // 首波为凹陷
+                document.getElementById('val-depth').innerText = `-${valStr} cm`;
+
+                if (isCurbSpeed && ev.maxVal >= THRESHOLD_CURB_CM) {
+                    cntCurb++;
+                    document.getElementById('val-type').innerText = "下马路牙子";
+                    document.getElementById('val-type').className = "card-sub curb-color";
+                    document.getElementById('alert-banner').className = "alert-curb";
+                    document.getElementById('alert-banner').innerText = `🚲 识别到下马路牙子！落差: ${valStr} cm [已智能剔除]`;
+                    saveEventWithWaveform("下马路牙子", `-${valStr}`, "否(台阶跌落)", "#c084fc");
+                } else if (ev.maxVal >= THRESHOLD_DANGER_CM) {
+                    // 【真实暗坑】
+                    cntDepression++;
+                    document.getElementById('cnt-depression').innerText = `${cntDepression} 处`;
+                    document.getElementById('val-type').innerText = "严重暗坑";
+                    document.getElementById('val-type').className = "card-sub depression-color";
+
+                    const banner = document.getElementById('alert-banner');
+                    banner.className = "alert-depression";
+                    banner.innerText = `⚠️ 发现严重路面暗坑！深度: -${valStr} cm [需紧急修缮]`;
+                    saveEventWithWaveform("严重暗坑(需修缮)", `-${valStr}`, "是(需紧急修缮)", "#ef4444");
+                }
+            }
+        }
+
+        function togglePolarity() {
+            polaritySign = -polaritySign;
+            const btn = document.getElementById('btn-invert');
+            if (polaritySign === -1) {
+                btn.innerText = "极性保护: 当前【正向(顶起为正)】，点击可手动反转";
+                btn.style.color = "#94a3b8";
+            } else {
+                btn.innerText = "极性保护: 当前【反向(已倒置)】，点击恢复正向";
+                btn.style.color = "#f59e0b";
             }
         }
 
@@ -385,77 +372,58 @@
             });
         }
 
-        // 高清波形报告渲染
         function generateWaveformCanvas(record) {
             const offCvs = document.createElement('canvas');
             const w = 720, h = 420;
             offCvs.width = w; offCvs.height = h;
             const g = offCvs.getContext('2d');
 
-            g.fillStyle = '#0b0f19';
-            g.fillRect(0, 0, w, h);
+            g.fillStyle = '#0b0f19'; g.fillRect(0, 0, w, h);
+            g.fillStyle = '#111827'; g.fillRect(0, 0, w, 70);
+            g.fillStyle = '#1f2937'; g.fillRect(0, 70, w, 1);
 
-            g.fillStyle = '#111827';
-            g.fillRect(0, 0, w, 70);
-            g.fillStyle = '#1f2937';
-            g.fillRect(0, 70, w, 1);
+            g.font = 'bold 18px sans-serif'; g.fillStyle = '#38bdf8';
+            g.fillText(`RoadAura 路况听诊器 · 首波锁定诊断报告 #${record.id}`, 20, 30);
 
-            g.font = 'bold 18px sans-serif';
-            g.fillStyle = '#38bdf8';
-            g.fillText(`RoadAura 路况听诊器 · 动力学校准诊断报告 #${record.id}`, 20, 30);
-
-            g.font = '13px sans-serif';
-            g.fillStyle = record.themeColor;
-            g.fillText(`● 判定类别: ${record.type} (估算真实尺寸: ${record.depth} cm)`, 20, 52);
+            g.font = '13px sans-serif'; g.fillStyle = record.themeColor;
+            g.fillText(`● 判定类别: ${record.type} (估算尺寸: ${record.depth} cm)`, 20, 52);
 
             g.fillStyle = '#94a3b8';
             g.fillText(`时间: ${record.time} | 车速: ${record.speed} km/h | 派单建议: ${record.dispatch}`, 300, 52);
 
             const chartTop = 90, chartBottom = 380;
-            const chartH = chartBottom - chartTop;
-            const midY = chartTop + chartH / 2;
-            const scale = 18.0; // 映射真实 0~10cm
+            const midY = chartTop + (chartBottom - chartTop) / 2;
+            const scale = 18.0;
 
-            g.strokeStyle = '#1e293b';
-            g.lineWidth = 1;
+            g.strokeStyle = '#1e293b'; g.lineWidth = 1;
             for(let y = chartTop; y <= chartBottom; y += 35) {
                 g.beginPath(); g.moveTo(40, y); g.lineTo(w - 20, y); g.stroke();
             }
 
-            g.strokeStyle = '#475569';
-            g.lineWidth = 1.5;
+            g.strokeStyle = '#475569'; g.lineWidth = 1.5;
             g.beginPath(); g.moveTo(40, midY); g.lineTo(w - 20, midY); g.stroke();
-            g.fillStyle = '#64748b'; g.font = '11px monospace';
-            g.fillText('0cm 基准', 5, midY + 4);
+            g.fillStyle = '#64748b'; g.font = '11px monospace'; g.fillText('0cm 基准', 5, midY + 4);
 
-            // ±4.5cm 危险线
-            g.strokeStyle = '#ef4444';
-            g.setLineDash([5, 5]);
-            g.beginPath(); g.moveTo(40, midY - 4.5 * scale); g.lineTo(w - 20, midY - 4.5 * scale); g.stroke();
-            g.fillStyle = '#ef4444'; g.fillText('+4.5cm', 5, midY - 4.5 * scale + 4);
+            g.strokeStyle = '#ef4444'; g.setLineDash([5, 5]);
+            g.beginPath(); g.moveTo(40, midY - 4.0 * scale); g.lineTo(w - 20, midY - 4.0 * scale); g.stroke();
+            g.fillStyle = '#ef4444'; g.fillText('+4.0cm', 5, midY - 4.0 * scale + 4);
 
-            g.beginPath(); g.moveTo(40, midY + 4.5 * scale); g.lineTo(w - 20, midY + 4.5 * scale); g.stroke();
-            g.fillText('-4.5cm', 5, midY + 4.5 * scale + 4);
+            g.beginPath(); g.moveTo(40, midY + 4.0 * scale); g.lineTo(w - 20, midY + 4.0 * scale); g.stroke();
+            g.fillText('-4.0cm', 5, midY + 4.0 * scale + 4);
             g.setLineDash([]);
 
             const wave = record.waveSnapshot;
             const step = (w - 70) / (wave.length - 1);
-
-            g.strokeStyle = record.themeColor;
-            g.lineWidth = 3;
-            g.beginPath();
+            g.strokeStyle = record.themeColor; g.lineWidth = 3; g.beginPath();
             for (let i = 0; i < wave.length; i++) {
                 const x = 45 + i * step;
                 const y = midY - (wave[i] * scale);
-                if (i === 0) g.moveTo(x, y);
-                else g.lineTo(x, y);
+                if (i === 0) g.moveTo(x, y); else g.lineTo(x, y);
             }
             g.stroke();
 
-            g.font = '11px monospace';
-            g.fillStyle = '#64748b';
-            g.fillText(`GPS 坐标: [${record.lat}, ${record.lng}]  |  已启用速度归一化动力学解耦模型  |  清华大创意挑战赛`, 45, 405);
-
+            g.font = '11px monospace'; g.fillStyle = '#64748b';
+            g.fillText(`GPS 坐标: [${record.lat}, ${record.lng}]  |  已启用首波相位解耦锁死算法  |  清华大创意挑战赛`, 45, 405);
             return offCvs;
         }
 
@@ -466,7 +434,7 @@
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `波形诊断图_#${record.id}_${record.type}_${Date.now()}.png`;
+                a.download = `首波锁定诊断图_#${record.id}_${Date.now()}.png`;
                 a.click();
                 URL.revokeObjectURL(url);
             });
@@ -479,12 +447,10 @@
             });
         }
 
-        function toggleRecord() {
+        async function toggleRecord() {
             if (!isRunning) {
                 if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
-                    DeviceMotionEvent.requestPermission().then(perm => {
-                        if (perm !== 'granted') { alert('请允许传感器权限！'); return; }
-                    });
+                    await DeviceMotionEvent.requestPermission();
                 }
 
                 isRunning = true;
@@ -493,7 +459,7 @@
                 baseX = 0; baseY = 0; baseZ = 0;
                 
                 document.getElementById('alert-banner').innerText = "⏳ 正在校准基准姿态，请保持手机静止 1.5 秒...";
-                document.getElementById('btn-start').innerText = "重新校准 / 停止";
+                document.getElementById('btn-start').innerText = "停止路况监测";
                 document.getElementById('btn-start').style.background = "#e11d48";
 
                 window.addEventListener('devicemotion', onDeviceMotion);
@@ -503,16 +469,33 @@
                 window.removeEventListener('devicemotion', onDeviceMotion);
                 if (gpsWatchId) navigator.geolocation.clearWatch(gpsWatchId);
 
-                document.getElementById('btn-start').innerText = "开启监测与校准";
+                document.getElementById('btn-start').innerText = "开启路况智能监测";
                 document.getElementById('btn-start').style.background = "#0284c7";
-                document.getElementById('alert-banner').innerText = "监测已暂停，点击重新校准";
+                document.getElementById('alert-banner').innerText = "监测已暂停";
                 document.getElementById('alert-banner').className = "";
+            }
+        }
+
+        function startGpsTracking() {
+            if ("geolocation" in navigator) {
+                gpsWatchId = navigator.geolocation.watchPosition(
+                    (pos) => {
+                        const lat = pos.coords.latitude.toFixed(6);
+                        const lng = pos.coords.longitude.toFixed(6);
+                        const rawSpd = pos.coords.speed !== null && pos.coords.speed > 0 ? (pos.coords.speed * 3.6) : 0.0;
+                        currentGps = { lat: lat, lng: lng, speed: rawSpd };
+                        document.getElementById('val-gps').innerText = `${lat}, ${lng}`;
+                        document.getElementById('val-speed').innerText = `${rawSpd.toFixed(1)} km/h`;
+                    },
+                    (err) => { document.getElementById('val-gps').innerText = "室内无GPS信号"; },
+                    { enableHighAccuracy: true, maximumAge: 1000, timeout: 5000 }
+                );
             }
         }
 
         function exportCsvData() {
             if (logRecords.length === 0) { alert("尚未记录到数据！"); return; }
-            let csv = "\uFEFF事件编号,记录时间,甄别类型,真实估算尺寸(cm),纬度,经度,车速(km/h),是否派单\n";
+            let csv = "\uFEFF事件编号,记录时间,甄别类型,估算尺寸(cm),纬度,经度,车速(km/h),是否派单\n";
             logRecords.forEach(r => {
                 csv += `${r.id},${r.time},${r.type},${r.depth},${r.lat},${r.lng},${r.speed},${r.dispatch}\n`;
             });
