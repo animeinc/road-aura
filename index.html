@@ -53,7 +53,7 @@
           <div class="panel-head"><div><h2>实时 GPS 轨迹地图</h2><p>实地模式按 GPS 实时绘制；演示底图与事件数据相互隔离。</p></div><span class="source-chip sim" id="map-chip">演示底图</span></div>
           <div class="map-wrap">
             <div class="map-caption" id="map-caption">等待定位；模拟信号不会生成真实事件坐标。</div>
-            <div id="live-map" class="route" aria-label="实时 GPS 地图"></div>
+            <div id="live-map" class="route live-map" aria-label="实时 GPS 地图"></div>
             <div class="map-legend"><span><i class="key-line"></i>有效纠偏轨迹</span><span><i class="key-event"></i>实测候选</span><span><i class="key-raw"></i>当前原始 GPS</span></div>
           </div>
         </section>
@@ -93,8 +93,9 @@
     };
     const $=id=>document.getElementById(id), canvas=$('signal'), ctx=canvas?.getContext('2d');
     const mapCSS=`
-      .live-map{position:relative;overflow:hidden;touch-action:none;background:#e8efec;cursor:grab}
-      .live-map.dragging{cursor:grabbing}.map-tiles,.map-overlay{position:absolute;inset:0;width:100%;height:100%}
+      .live-map{position:relative;isolation:isolate;contain:layout paint;display:block;box-sizing:border-box;z-index:0;overflow:hidden;touch-action:none;background:#e8efec;cursor:grab;width:100%;height:220px;min-height:220px;max-height:220px;border:1px solid #dce6e2;border-radius:12px}
+      .live-map.dragging{cursor:grabbing}.map-tiles,.map-overlay{position:absolute;inset:0;width:100%;height:100%;max-width:100%;max-height:100%;box-sizing:border-box}
+      .map-tiles{z-index:0;pointer-events:none}.map-overlay{z-index:1;pointer-events:none}
       .map-tiles img{position:absolute;width:256px;height:256px;max-width:none;user-select:none;pointer-events:none}
       .map-overlay{pointer-events:none}.map-toolbar{position:absolute;z-index:4;top:8px;right:8px;display:flex;gap:5px}
       .map-toolbar button{border:1px solid #d3dfda;background:#fff;color:#28413b;border-radius:8px;width:32px;height:30px;font-weight:800;box-shadow:0 2px 7px #163b351c}
