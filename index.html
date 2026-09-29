@@ -1,0 +1,573 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#f4f7f5">
+  <title>RoadAura｜道路异常振动采集原型</title>
+  <style>
+    :root{--ink:#1b2b34;--muted:#667981;--paper:#f4f7f5;--card:#fff;--line:#dce6e2;--teal:#087f75;--teal2:#e5f4f0;--amber:#b66d16;--amber2:#fff2dc;--red:#b8483d;--red2:#fbeae7;--navy:#19323b;--shadow:0 12px 32px rgba(29,57,62,.07)}
+    *{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.5 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}button{font:inherit;cursor:pointer}button:focus-visible{outline:3px solid #63b8ad;outline-offset:2px}.shell{max-width:1180px;margin:0 auto;padding:24px 24px 48px}.topbar{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:28px}.brand{display:flex;align-items:center;gap:12px}.brand-mark{width:42px;height:42px;border-radius:14px;background:var(--navy);display:grid;place-items:center;color:white;font-size:19px;font-weight:700;letter-spacing:-1px}.brand-name{font-weight:750;letter-spacing:.02em}.brand-sub{font-size:12px;color:var(--muted)}.stage-chip,.source-chip,.soft-chip{display:inline-flex;align-items:center;gap:7px;border-radius:99px;padding:7px 12px;font-size:12px;font-weight:650}.stage-chip{background:var(--amber2);color:#88530f}.stage-chip:before{content:"";width:7px;height:7px;border-radius:50%;background:#d19031}.hero{display:grid;grid-template-columns:1.25fr .75fr;gap:20px;align-items:stretch;margin-bottom:18px}.hero-main{padding:28px 30px;border-radius:22px;color:white;background:linear-gradient(122deg,#19323b,#24515a);box-shadow:var(--shadow);position:relative;overflow:hidden}.eyebrow{font-size:12px;letter-spacing:.11em;text-transform:uppercase;color:#9ed1c7;font-weight:700}.hero h1{font-size:clamp(28px,4vw,42px);line-height:1.16;margin:12px 0 12px;letter-spacing:-.03em}.hero p{max-width:630px;color:#d3e3df;margin:0;font-size:15px}.hero-note{margin-top:20px;display:flex;flex-wrap:wrap;gap:8px}.soft-chip{background:rgba(255,255,255,.1);color:#e9f4f1}.hero-side{background:#e3efea;border:1px solid #d7e8e0;border-radius:22px;padding:24px;display:flex;flex-direction:column;justify-content:space-between}.hero-side .label{font-size:12px;color:#59746e;font-weight:700}.hero-side strong{display:block;font-size:21px;line-height:1.35;margin-top:8px}.hero-side p{font-size:13px;color:#5f7771;margin:9px 0 0}.tabs{display:flex;gap:8px;padding:5px;border-radius:14px;background:#e8eeeb;width:max-content;margin:22px 0 16px}.tab{border:0;background:transparent;color:#60716f;border-radius:10px;padding:10px 16px;font-weight:700;font-size:13px}.tab.active{background:white;color:var(--ink);box-shadow:0 2px 7px rgba(32,58,57,.08)}.notice{display:flex;align-items:flex-start;gap:12px;background:#fff4df;border:1px solid #f0d9ac;border-radius:14px;padding:12px 15px;color:#76541d;font-size:13px;margin-bottom:16px}.notice b{color:#5e4115}.notice .icon{font-size:16px;line-height:1.3}.main-grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(310px,.85fr);gap:16px}.panel{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow)}.panel-head{padding:18px 20px 0;display:flex;justify-content:space-between;align-items:flex-start;gap:12px}.panel-head h2{font-size:16px;margin:0 0 3px}.panel-head p{font-size:12px;color:var(--muted);margin:0}.source-chip{background:var(--teal2);color:#246f66;white-space:nowrap}.source-chip.sim{background:var(--amber2);color:#88530f}.chart-wrap{padding:10px 16px 16px}.chart-legend{display:flex;justify-content:space-between;align-items:center;padding:0 4px 8px;color:var(--muted);font-size:11px}.chart-legend .legend-key{display:flex;gap:6px;align-items:center}.dot{width:8px;height:8px;background:#29968b;border-radius:50%;display:inline-block}canvas{width:100%;height:228px;display:block;border-radius:12px;background:#f7faf8}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:0 18px 18px}.stat{background:#f7faf8;border:1px solid #e8efec;border-radius:12px;padding:12px}.stat small{display:block;color:var(--muted);font-size:11px}.stat strong{display:block;font-size:17px;margin-top:3px}.stat strong.small-val{font-size:13px}.map-wrap{padding:10px 16px 16px}.map-caption{font-size:11px;color:var(--muted);padding:0 3px 8px}.route{width:100%;height:188px;border-radius:12px;background:#f4f8f6;border:1px solid #e8efec}.map-legend{display:flex;gap:14px;flex-wrap:wrap;padding:8px 3px 0;color:var(--muted);font-size:11px}.map-legend span{display:flex;align-items:center;gap:6px}.key-line{height:3px;width:17px;background:#8abbb0;border-radius:2px}.key-event{height:9px;width:9px;border-radius:50%;background:#c7842c;border:2px solid white;box-shadow:0 0 0 1px #c7842c}.key-raw{height:9px;width:9px;border-radius:50%;background:#7e8985;border:2px solid white;box-shadow:0 0 0 1px #7e8985}.controls{display:flex;flex-wrap:wrap;gap:9px;margin:16px 0}.btn{border:0;border-radius:11px;padding:11px 16px;font-size:13px;font-weight:720}.btn-primary{background:var(--teal);color:#fff}.btn-primary:hover{background:#066d65}.btn-secondary{background:#e6efeb;color:#315650}.btn-ghost{background:transparent;color:#687a78;border:1px solid #d8e2df}.btn-danger{background:#faece9;color:#9e4038}.btn:disabled{opacity:.5;cursor:not-allowed}.field-only{display:none}.mode-field .field-only{display:inline-flex}.mode-field .demo-only{display:none}.field-instructions{font-size:12px;color:var(--muted);margin:0 0 12px}.side-stack{display:flex;flex-direction:column;gap:16px}.event-panel{min-height:230px}.event-list{padding:14px 18px 18px;display:flex;flex-direction:column;gap:8px;max-height:315px;overflow:auto}.empty{border:1px dashed #d6e2de;border-radius:12px;padding:22px;text-align:center;color:#7d8e8a;font-size:13px}.event{display:flex;flex-wrap:wrap;gap:11px;align-items:flex-start;border:1px solid #e5ece9;border-radius:12px;padding:11px 12px}.event-marker{width:28px;height:28px;border-radius:9px;background:var(--amber2);color:#a5661b;display:grid;place-items:center;font-weight:800;font-size:12px;flex:0 0 auto}.event-main{min-width:0;flex:1}.event-title{font-size:13px;font-weight:740}.event-meta{font-size:11px;color:var(--muted);margin-top:3px;overflow-wrap:anywhere}.event-tag{font-size:10px;background:#f0f4f2;border-radius:99px;padding:3px 7px;color:#697d78;white-space:nowrap}.guide{padding:17px 19px}.guide h2{font-size:14px;margin:0 0 10px}.guide ol{padding-left:20px;margin:0;color:#61736f;font-size:12px}.guide li{margin:5px 0}.guide strong{color:#334b47}.footer-note{text-align:center;font-size:11px;color:#82928e;margin-top:20px}.toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,20px);opacity:0;pointer-events:none;background:#17353d;color:white;padding:11px 16px;border-radius:12px;box-shadow:var(--shadow);font-size:13px;transition:.25s;z-index:20}.toast.show{opacity:1;transform:translate(-50%,0)}
+    @media(max-width:850px){.hero{grid-template-columns:1fr}.hero-side{min-height:150px}.main-grid{grid-template-columns:1fr}.side-stack{display:grid;grid-template-columns:1fr}.shell{padding:16px 14px 34px}.topbar{margin-bottom:16px}.hero-main{padding:23px}.stats{gap:7px;padding-left:12px;padding-right:12px}.stat{padding:10px}}
+    @media(max-width:480px){.topbar{align-items:flex-start}.stage-chip{font-size:10px;padding:6px 9px}.brand-sub{max-width:165px}.hero-side strong{font-size:18px}.tabs{width:100%}.tab{flex:1;padding:9px 10px}.stats{grid-template-columns:1fr 1fr}.stats .stat:last-child{grid-column:1/-1}.controls .btn{flex:1}.panel-head{padding-left:15px;padding-right:15px}}
+  </style>
+</head>
+<body>
+  <div class="shell" id="app">
+    <header class="topbar">
+      <div class="brand"><div class="brand-mark">RA</div><div><div class="brand-name">RoadAura</div><div class="brand-sub">道路异常振动采集原型</div></div></div>
+      <div class="stage-chip">定位修复版 · 研发阶段原型</div>
+    </header>
+    <section class="hero">
+      <div class="hero-main">
+        <div class="eyebrow">MOBILE SENSING · HUMAN REVIEW</div>
+        <h1>让可疑路段先被看见</h1>
+        <p>用固定在车辆上的手机记录振动、时间和可用的定位信息，把异常片段整理成可复核线索。原型不直接测量坑深，也不自动生成养护结论。</p>
+        <div class="hero-note"><span class="soft-chip">手机传感器</span><span class="soft-chip">本地事件记录</span><span class="soft-chip">人工复核</span></div>
+      </div>
+      <aside class="hero-side"><div><div class="label">当前能力边界</div><strong>异常振动候选<br>≠ 路面病害确诊</strong></div><p>厘米级深度、识别准确率、多车验证和成本收益都需要真实道路数据支持。</p></aside>
+    </section>
+
+    <nav class="tabs" aria-label="选择运行模式">
+      <button class="tab active" id="tab-demo" type="button">答辩演示</button>
+      <button class="tab" id="tab-field" type="button">实地采集</button>
+    </nav>
+    <div class="notice" id="mode-notice"><span class="icon">●</span><div><b>模拟演示模式</b>：本次演示新增的信号与事件为合成样例；历史实采记录仍以“实采”标注，不代表道路识别准确率。</div></div>
+
+    <main class="main-grid">
+      <section class="panel">
+        <div class="panel-head"><div><h2>振动信号与事件候选</h2><p id="signal-subtitle">播放一段可重复的示例过程，查看波形如何进入待复核记录。</p></div><span class="source-chip sim" id="source-chip">模拟数据</span></div>
+        <div class="chart-wrap">
+          <div class="chart-legend"><span class="legend-key"><i class="dot"></i><span id="signal-label">竖直加速度（模拟）</span><b class="polarity-up">+向上</b><b class="polarity-down">−向下</b></span><span>红叉=异常样本已剔除</span></div>
+          <canvas id="signal" aria-label="振动波形图"></canvas>
+        </div>
+        <div class="algorithm-note" id="algorithm-summary">算法路径：重力方向投影 → 静置基线与 MAD 自适应阈值 → 双峰顺序判凸起/凹陷 → 凸起再细分：前后轮两次冲击的间隔×车速是否≈轴距、陀螺仪姿态（汽车：减速带横跨车道以俯仰为主，单侧凸起侧倾明显；两轮车：减速带垂直横跨、车把无转向扰动，窄小/斜向凸起会让车把摆动）、通过前是否减速；多次连续冲击判为颠簸路面。规则阈值为启发式设定，未经路测标定，不能替代现场标签。</div>
+        <div class="stats">
+          <div class="stat"><small>待复核事件</small><strong id="event-count">0 条</strong></div>
+          <div class="stat"><small>当前采集状态</small><strong class="small-val" id="capture-state">待开始</strong></div>
+          <div class="stat"><small>最近事件幅值</small><strong class="small-val" id="last-value">—</strong></div>
+        </div>
+      </section>
+
+      <div class="side-stack">
+        <section class="panel">
+          <div class="panel-head"><div><h2>实时 GPS 轨迹地图</h2><p>定位点本地显示；实地候选点按编号标注，可在高德地图查看。</p></div><span class="source-chip sim" id="map-chip">本地定位图</span></div>
+          <div class="map-wrap">
+            <div class="map-statusline"><span id="gps-status"><b>GPS：</b>未定位</span><span id="map-mode-status">定位不依赖底图</span></div>
+            <div class="map-actions"><button class="btn btn-primary" id="locate-now" type="button">定位并显示我的位置</button><button class="btn btn-secondary" id="open-amap" type="button" disabled>在高德查看当前点</button></div>
+            <div class="map-coordinates" id="map-coordinates" aria-live="polite">尚无定位点。可先单独定位，再决定是否开启传感器采集。</div>
+            <div class="map-coordinates" id="map-point-status" aria-live="polite">计数点：0；等待实采事件</div>
+            <div class="map-caption" id="map-caption">地图点位按事件编号标注；模拟信号不会生成真实事件坐标。</div>
+            <section class="map-config" aria-label="开放地图接入与隐私设置">
+              <div class="map-config-title">免 Key 开放底图 · OpenFreeMap</div>
+              <div class="map-key-row"><button class="btn btn-secondary" id="load-openmap" type="button">连接开放地图（无需 Key）</button></div>
+              <label class="map-consent"><input id="map-consent" type="checkbox"><span>我同意从 unpkg 加载地图脚本，并向 OpenFreeMap 请求底图；这些服务可能看到网络地址，OpenFreeMap 还可推知大致查看区域。</span></label>
+              <p class="privacy-note">不连接在线底图也会在框内显示定位点、轨迹与编号事件。公开底图无需账号或私有 API Key，联网可达性取决于现场网络。点击“在高德查看”时，当前精确坐标才会交给高德；单独定位不会保存轨迹，实地采集需另行确认本机存储。</p>
+            </section>
+            <div class="map-stage">
+              <div id="live-map" class="route live-map" aria-label="OpenFreeMap 实时 GPS 地图"></div>
+              <svg class="map-overlay" id="map-overlay" aria-hidden="true"></svg>
+              <div class="map-message" id="map-message">可直接定位并显示点位；在线底图为可选项</div>
+              <div class="map-toolbar"><button type="button" id="zoom-in" aria-label="放大地图">+</button><button type="button" id="zoom-out" aria-label="缩小地图">−</button><button type="button" id="map-follow" aria-label="回到当前位置">⌖</button></div>
+            </div>
+            <div class="map-attribution" id="map-attribution" hidden><a href="https://openfreemap.org/" target="_blank" rel="noreferrer">© OpenFreeMap</a> · <a href="https://openmaptiles.org/" target="_blank" rel="noreferrer">© OpenMapTiles</a> · 数据来自 <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© OpenStreetMap contributors</a></div>
+            <div class="map-legend"><span><i class="key-line"></i>有效纠偏轨迹</span><span><i class="key-event"></i>编号事件候选</span><span><i class="key-raw"></i>原始 GPS</span></div>
+            <p class="algorithm-note">浏览器定位按 WGS‑84 处理；本地示意图与开放底图不执行 GCJ‑02 偏移。高德官方 URI 打点明确指定 WGS‑84，由高德处理显示坐标。精度门限、跳点和短窗平滑只能减轻部分漂移，不能提高设备精度或吸附道路。</p>
+          </div>
+        </section>
+        <section class="panel event-panel">
+          <div class="panel-head"><div><h2>待复核记录</h2><p>记录仅保存在当前浏览器，可导出或清除。</p></div></div>
+          <div class="event-list" id="events"><div class="empty">还没有事件。开始演示或实地采集后，候选记录会显示在这里。</div></div>
+        </section>
+      </div>
+    </main>
+
+    <div class="controls">
+      <button class="btn btn-primary demo-only" id="play-demo" type="button">播放答辩演示</button>
+      <button class="btn btn-secondary demo-only" id="step-demo" type="button">添加单条示例事件</button>
+      <button class="btn btn-primary field-only" id="start-field" type="button">开启真实采集</button>
+      <button class="btn btn-danger field-only" id="stop-field" type="button" disabled>停止采集</button>
+      <button class="btn btn-ghost" id="export-xlsx" type="button">导出 Excel（全量）</button><button class="btn btn-ghost" id="export-jpg" type="button">导出 JPG 图表</button><button class="btn btn-ghost" id="export-csv" type="button">导出 CSV</button>
+      <button class="btn btn-ghost" id="clear-data" type="button">清除本机记录</button>
+    </div>
+    <p class="field-instructions" id="field-note" hidden>请把手机牢固固定在车把支架或车内支架上，并选择对应车辆类型；运动与定位权限通常要求 HTTPS 或 localhost。程序会剔除自由落体/极端冲击，竖直方向由重力向量估计；凸起/凹陷仅为响应形状候选。GPS 会保留原始 WGS‑84 与平滑坐标，并在免 Key 开放底图上显示。</p>
+    <label class="privacy-consent" id="vehicle-row">车辆类型（用于核对前后轮冲击间隔，演示同样适用）：<select id="vehicle-profile" class="review-select" style="max-width:240px"><option value="bike" selected>自行车/电动两轮（轴距 0.9–1.5 m）</option><option value="car">小汽车（轴距 2.2–3.4 m）</option></select></label>
+    <label class="field-only privacy-consent" id="field-privacy-row"><input id="field-privacy-consent" type="checkbox"><span>我已知悉实地模式会在本机保存 GPS 轨迹与传感器记录，并在导出文件中包含定位数据。</span></label>
+    <footer class="footer-note">RoadAura · 端侧测量记录 · 地图服务单独授权 / 未经真实路测验证 / 候选标签不可代替人工复核</footer>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+  (()=>{
+    'use strict';
+    const STORE='roadaura_records_v3', DB_NAME='roadaura_measurements_v1', DB_VERSION=1;
+    const BASE_THRESHOLD=3.2, MAX_THRESHOLD=8, ARTIFACT_LIMIT=60, GPS_ACCURACY_LIMIT=60, MAX_GPS_SPEED=55, NOISE_SIGMA=1.4826;
+    const state={
+      mode:'demo', records:[], wave:Array.from({length:120},()=>({value:0,artifact:false})),
+      running:false, watchId:null, gps:null, rawGps:null, gpsErrorText:'', gpsWindow:[], gpsTrack:[], gpsFallback:[],
+      calibrating:false, calibration:[], calibrationStart:0, gravity:null, noiseMad:0,
+      active:null, rejectUntil:0, lastVertical:null, lastMotionAt:0, demoTimer:null, serial:1,
+      recentSamples:[], fieldFallbackSamples:[], demoSamples:[], sampleBatch:[], gpsBatch:[],
+      writeQueue:Promise.resolve(), dbFailed:false, dbAvailable:null, artifactCount:0, autoCenter:true,
+      mapCenter:null, mapZoom:17, map:null, mapReady:false, mapGridKey:null, gpsFixCount:0, mapFramePending:false, focusedEventId:null,
+      motionBuf:[], speedHist:[], lastDoppler:null, fwdLearn:{cov:[0,0,0,0,0,0,0,0,0],count:0,up:null}, pendingCrossing:null, crossingTimer:null, lastMotion:null
+    };
+    const $=id=>document.getElementById(id), canvas=$('signal'), ctx=canvas?.getContext('2d');
+    const mapCSS=`
+      .map-config{border:1px solid #dce6e2;border-radius:12px;background:#f8fbf9;padding:11px 12px;margin:0 0 9px;font-size:11px;color:#5d706b}
+      .map-config-title{font-size:12px;font-weight:750;color:#264940;margin-bottom:7px}.map-key-row{display:grid;grid-template-columns:1fr;gap:7px}
+      .map-key-row input{min-width:0;width:100%;height:36px;padding:7px 9px;border:1px solid #d5e1dc;border-radius:8px;background:#fff;color:#243a35;font:inherit}
+      .map-key-row .btn{padding:8px 12px;font-size:12px}.map-attribution{font-size:9px;color:#6c7d77;text-align:right;margin:3px 2px 0}.map-attribution a{color:inherit}.event-evidence{font-size:10px;color:#657772;margin-top:4px}.review-select{max-width:110px;padding:5px 7px;border:1px solid #d5e1dc;border-radius:8px;background:#fff;color:#465c56;font:11px sans-serif}.map-consent,.privacy-consent{display:flex;align-items:flex-start;gap:7px;margin-top:8px;font-size:11px;line-height:1.4;color:#4b625b;cursor:pointer}
+      .map-consent input,.privacy-consent input{flex:0 0 auto;margin:2px 0 0;accent-color:#087f75}.privacy-note{font-size:10px;line-height:1.45;color:#71817c;margin:7px 0 0}
+      .map-actions{display:flex;flex-wrap:wrap;gap:7px;margin:0 0 8px}.map-actions .btn{padding:8px 11px;font-size:11px}.map-actions .btn:disabled{opacity:.5;cursor:not-allowed}.map-coordinates{font-size:11px;color:#385a51;line-height:1.4;margin:0 0 8px;overflow-wrap:anywhere}#map-point-status{color:#657772}
+      .map-stage{position:relative;isolation:isolate;contain:layout paint;overflow:hidden;width:100%;height:290px;min-height:290px;max-height:290px;border:1px solid #dce6e2;border-radius:12px;background:repeating-linear-gradient(0deg,transparent 0 48px,#d8e4de 49px 50px),repeating-linear-gradient(90deg,#edf3ef 0 48px,#d8e4de 49px 50px);z-index:0}
+      .live-map{position:absolute;inset:0;z-index:0;display:block;box-sizing:border-box;overflow:hidden;touch-action:none;background:transparent;width:100%;height:100%;border:0;border-radius:11px}
+      .map-overlay{position:absolute;inset:0;z-index:1;width:100%;height:100%;max-width:100%;max-height:100%;box-sizing:border-box;overflow:hidden;pointer-events:none}
+      .map-message{position:absolute;z-index:2;left:8px;bottom:8px;max-width:calc(100% - 16px);padding:5px 8px;background:#ffffffea;border:1px solid #dce6e2;border-radius:8px;color:#58706a;font-size:11px;text-align:left;pointer-events:none}
+      .map-toolbar{position:absolute;z-index:4;top:8px;right:8px;display:flex;gap:5px}
+      .map-toolbar button{border:1px solid #d3dfda;background:#fff;color:#28413b;border-radius:8px;width:32px;height:30px;font-weight:800;box-shadow:0 2px 7px #163b351c}
+      .map-pin-leader{stroke:#445d57;stroke-width:1.6;stroke-dasharray:3 2;opacity:.8}.map-pin{fill:#c7842c;stroke:#fff;stroke-width:2}.map-pin-raw{fill:#7e8985;stroke:#fff;stroke-width:2}.map-pin-number{fill:#fff;font:700 10px sans-serif;text-anchor:middle;dominant-baseline:central}
+      .map-track{fill:none;stroke:#16877c;stroke-width:4;stroke-linecap:round;stroke-linejoin:round;opacity:.88}.map-raw-dot{fill:#7e8985;stroke:#fff;stroke-width:2}.map-fixed-dot{fill:#157cb3;stroke:#fff;stroke-width:2}.map-accuracy{fill:#157cb32b;stroke:#157cb3a8;stroke-width:1.5}.map-dot-label{fill:#193a47;stroke:#fff;stroke-width:3;paint-order:stroke;font:700 12px sans-serif}.map-focus{border:1px solid #cddbd5;border-radius:6px;background:#f7fbf9;color:#246f66;padding:3px 7px;font:600 10px sans-serif}.map-pin-focused{fill:#d94d3f;stroke:#fff;stroke-width:3;filter:drop-shadow(0 0 5px #d94d3f88)}
+      .map-statusline{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:0 2px 7px;font-size:11px;color:#62746f}
+      .map-statusline b{color:#246f66;font-weight:650}.polarity-up{color:#be6342;font-style:normal;margin-left:5px}.polarity-down{color:#357eaf;font-style:normal;margin-left:3px}
+      #selftest-status{font-size:11px;color:#4c766f;margin:0 0 10px}.algorithm-note{font-size:11px;color:#657772;margin:9px 2px 0;line-height:1.5}
+      @media(max-width:480px){.map-statusline{font-size:10px}.map-toolbar button{width:30px}.map-config{padding:9px}.privacy-note{font-size:9px}}
+    `;
+    document.head.insertAdjacentHTML('beforeend',`<style>${mapCSS}</style>`);
+    const map=$('live-map');
+    if(map)map.innerHTML='';
+    let mapLibreLoaderPromise=null;
+    $('export-csv')?.insertAdjacentHTML('beforebegin','<button class="btn btn-ghost" id="selftest-btn" type="button">运行模拟自检</button>');
+    $('selftest-btn')?.insertAdjacentHTML('afterend','<span id="selftest-status">自检结果加载中…</span>');
+    function toast(msg){const el=$('toast');if(!el)return;el.textContent=msg;el.classList.add('show');clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.classList.remove('show'),3200)}
+    function currentThreshold(){const sigma=NOISE_SIGMA*(Number(state.noiseMad)||0);return Math.min(MAX_THRESHOLD,Math.max(BASE_THRESHOLD,BASE_THRESHOLD+3*sigma))}
+    function resizeCanvas(){if(!canvas||!ctx)return;const r=canvas.getBoundingClientRect(),d=Math.max(1,window.devicePixelRatio||1);canvas.width=Math.round(r.width*d);canvas.height=Math.round(r.height*d);ctx.setTransform(d,0,0,d,0,0);draw()}
+    function draw(){
+      if(!ctx||!canvas)return;const w=canvas.clientWidth||640,h=canvas.clientHeight||228;if(!w)return;
+      ctx.clearRect(0,0,w,h);ctx.fillStyle='#f7faf8';ctx.fillRect(0,0,w,h);
+      ctx.strokeStyle='#e5eeea';ctx.lineWidth=1;for(let i=1;i<5;i++){const y=h*i/5;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke()}
+      const vals=state.wave.map(p=>p?.value).filter(Number.isFinite), observed=Math.max(BASE_THRESHOLD,...vals.map(v=>Math.abs(v))),range=Math.min(24,Math.max(8,observed*1.12));
+      const mid=h/2,scale=(h/2-18)/range;
+      const threshold=currentThreshold();ctx.setLineDash([5,5]);ctx.strokeStyle='#e2ad62';ctx.lineWidth=1;
+      [threshold,-threshold].forEach(v=>{const y=mid-v*scale;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke()});ctx.setLineDash([]);
+      ctx.fillStyle='#9b713a';ctx.font='10px sans-serif';ctx.fillText(`当前阈值 ±${threshold.toFixed(1)}`,8,Math.max(12,mid-BASE_THRESHOLD*scale-4));
+      ctx.strokeStyle='#cad8d3';ctx.beginPath();ctx.moveTo(0,mid);ctx.lineTo(w,mid);ctx.stroke();
+      ctx.fillStyle='#a85d42';ctx.fillText('+向上',w-47,13);ctx.fillStyle='#34799f';ctx.fillText('−向下',w-47,h-5);
+      const n=state.wave.length;let open=false;ctx.lineWidth=2;ctx.strokeStyle='#16877c';ctx.beginPath();
+      state.wave.forEach((p,i)=>{const x=i*(w/(n-1));if(!p||p.artifact||!Number.isFinite(p.value)){open=false;return}const v=Math.max(-range,Math.min(range,p.value)),y=mid-v*scale;if(!open){ctx.moveTo(x,y);open=true}else ctx.lineTo(x,y)});ctx.stroke();
+      state.wave.forEach((p,i)=>{if(!p?.artifact)return;const x=i*(w/(n-1)),y=p.rawSign<0?h-16:16;ctx.strokeStyle='#c34136';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x-4,y-4);ctx.lineTo(x+4,y+4);ctx.moveTo(x+4,y-4);ctx.lineTo(x-4,y+4);ctx.stroke()});
+      if(observed>range){ctx.fillStyle='#ad493e';ctx.fillText('幅值超出显示范围（见 Excel 原始值）',8,h-7)}
+    }
+    function pushWave(value,artifact=false,rawSign=1){state.wave.push({value:Number.isFinite(value)?value:null,artifact,rawSign});if(state.wave.length>120)state.wave.shift();draw()}
+    function median(values){const a=values.filter(Number.isFinite).slice().sort((x,y)=>x-y);if(!a.length)return null;const m=Math.floor(a.length/2);return a.length%2?a[m]:(a[m-1]+a[m])/2}
+    function vecNorm(v){return v?Math.hypot(v.x,v.y,v.z):NaN}
+    function vecFrom(o){return o&&[o.x,o.y,o.z].every(Number.isFinite)?{x:Number(o.x),y:Number(o.y),z:Number(o.z)}:null}
+    function waveletDetailFeatures(points){
+      const rows=points.map((p,i)=>({time:Number.isFinite(Number(p.time))?Number(p.time):p.index*40,value:p.value})).filter(p=>Number.isFinite(p.time)&&Number.isFinite(p.value));
+      if(rows.length<8)return {sampleIntervalMs:null,waveletD1Energy:null,waveletD2Energy:null,waveletD3Energy:null};
+      const intervals=[];for(let i=1;i<rows.length;i++){const dt=rows[i].time-rows[i-1].time;if(dt>0)intervals.push(dt)}
+      const step=median(intervals);if(!Number.isFinite(step)||step<8||step>300)return {sampleIntervalMs:null,waveletD1Energy:null,waveletD2Energy:null,waveletD3Energy:null};
+      const sampled=[];let j=0;for(let t=rows[0].time;t<=rows[rows.length-1].time+step*.25&&sampled.length<512;t+=step){while(j<rows.length-2&&rows[j+1].time<t)j++;const a=rows[j],b=rows[Math.min(j+1,rows.length-1)],span=b.time-a.time,ratio=span>0?Math.max(0,Math.min(1,(t-a.time)/span)):0;sampled.push(a.value+(b.value-a.value)*ratio)}
+      if(sampled.length<8)return {sampleIntervalMs:step,waveletD1Energy:null,waveletD2Energy:null,waveletD3Energy:null};
+      let layer=sampled,energies=[];for(let level=0;level<3&&layer.length>=4;level++){const approx=[],detail=[];for(let i=0;i+1<layer.length;i+=2){approx.push((layer[i]+layer[i+1])/Math.SQRT2);detail.push((layer[i]-layer[i+1])/Math.SQRT2)}if(!detail.length)break;energies.push(detail.reduce((sum,v)=>sum+v*v,0)/detail.length);layer=approx}
+      return {sampleIntervalMs:step,waveletD1Energy:energies[0]??null,waveletD2Energy:energies[1]??null,waveletD3Energy:energies[2]??null}
+    }
+    function lobeSupport(values,index,sign,magnitude,floor){
+      const level=Math.max(.8,Math.min(magnitude*.45,floor*.65));let left=index,right=index;
+      while(left>0&&values[left-1]*sign>=level)left--;while(right<values.length-1&&values[right+1]*sign>=level)right++;
+      return right-left+1
+    }
+    function classifyResponse(values,threshold=BASE_THRESHOLD,times=null,baselineValues=null){
+      const points=values.map((value,index)=>({value,index,time:Array.isArray(times)?times[index]:index*40})).filter(p=>Number.isFinite(p.value));
+      const emptyFeatures={baseline:0,noiseMad:0,noiseSigma:0,decisionThreshold:threshold,positivePeak:0,negativePeak:0,peakRatio:0,lagMs:0,rms:0,energy:0,positiveSupport:0,negativeSupport:0,sampleIntervalMs:null,waveletD1Energy:null,waveletD2Energy:null,waveletD3Energy:null};
+      if(points.length<5)return {label:'振动事件候选（采样不足，形状不明）',pattern:'样本不足',kind:'unknown',features:{...emptyFeatures,sampleCount:points.length},evidence:'有效样本不足'};
+      const prefix=points.slice(0,Math.min(points.length,Math.max(3,Math.ceil(points.length*.25)))),baselineSource=Array.isArray(baselineValues)?baselineValues.filter(Number.isFinite):[],noiseSource=baselineSource.length?baselineSource:prefix.map(p=>p.value),baseline=median(noiseSource)??0,noiseMad=median(noiseSource.map(v=>Math.abs(v-baseline)))??0,noiseSigma=NOISE_SIGMA*noiseMad,centered=points.map(p=>p.value-baseline);
+      const max=Math.max(...centered),min=Math.min(...centered),p=Math.max(0,max),n=Math.max(0,-min),pi=centered.indexOf(max),ni=centered.indexOf(min),peak=Math.max(p,n),rms=Math.sqrt(centered.reduce((sum,v)=>sum+v*v,0)/centered.length),energy=centered.reduce((sum,v)=>sum+v*v,0);
+      const t1=Number(points[pi]?.time),t2=Number(points[ni]?.time),lagMs=pi===ni?0:Number.isFinite(t1)&&Number.isFinite(t2)?Math.abs(t2-t1):Math.abs(points[ni].index-points[pi].index)*40,peakRatio=peak?Math.min(p,n)/peak:0;
+      const decisionThreshold=Math.min(MAX_THRESHOLD,Math.max(Number(threshold)||BASE_THRESHOLD,BASE_THRESHOLD+3*noiseSigma)),oppositeFloor=Math.max(1.2,decisionThreshold*.3,peak*.24,noiseSigma*2.5),positiveSupport=lobeSupport(centered,pi,1,p,oppositeFloor),negativeSupport=lobeSupport(centered,ni,-1,n,oppositeFloor),wavelet=waveletDetailFeatures(points);
+      const features={baseline,noiseMad,noiseSigma,decisionThreshold,positivePeak:p,negativePeak:n,peakRatio,lagMs,rms,energy,positiveSupport,negativeSupport,sampleCount:points.length,firstLobe:pi<ni?'positive':ni<pi?'negative':'none',...wavelet};
+      const evidence=`正峰 ${p.toFixed(1)} / 负峰 ${n.toFixed(1)} m/s² · 峰间隔 ${Math.round(lagMs)} ms · RMS ${rms.toFixed(1)} · 校准阈值 ${decisionThreshold.toFixed(1)}`;
+      if(peak<decisionThreshold)return {label:'无明显振动候选',pattern:'未越阈值',kind:'none',features,evidence};
+      const separation=Math.abs(ni-pi),paired=p>=oppositeFloor&&n>=oppositeFloor&&positiveSupport>=2&&negativeSupport>=2&&separation>=2&&lagMs>=50&&lagMs<=1000&&peakRatio>=.22;
+      if(paired){return pi<ni?{label:'减速带/凸起型响应候选（先向上后向下）',pattern:'先正后负',kind:'protrusion',features,evidence}:{label:'坑洼/凹陷型响应候选（先向下后向上）',pattern:'先负后正',kind:'depression',features,evidence}}
+      return {label:'振动事件候选（双峰持续性或时序证据不足）',pattern:p>=n?'正向单峰':'负向单峰',kind:'unknown',features,evidence}
+    }
+    const VEHICLE_PROFILES={car:{name:'小汽车',wheelbaseMin:2.2,wheelbaseMax:3.4,genericMinMs:150,genericMaxMs:1800,twoTrack:true},bike:{name:'自行车/电动两轮车',wheelbaseMin:.9,wheelbaseMax:1.5,genericMinMs:100,genericMaxMs:1000,twoTrack:false}};
+    function rotationFrom(rr){if(!rr)return null;const x=Number(rr.beta),y=Number(rr.gamma),z=Number(rr.alpha);return [x,y,z].every(Number.isFinite)?{x,y,z}:null}
+    function vecDot(a,b){return a.x*b.x+a.y*b.y+a.z*b.z}
+    function vecUnit(v){const n=vecNorm(v);return Number.isFinite(n)&&n>1e-9?{x:v.x/n,y:v.y/n,z:v.z/n}:null}
+    function vecHorizontal(v,up){const d=vecDot(v,up);return {x:v.x-d*up.x,y:v.y-d*up.y,z:v.z-d*up.z}}
+    function vecCross(a,b){return {x:a.y*b.z-a.z*b.y,y:a.z*b.x-a.x*b.z,z:a.x*b.y-a.y*b.x}}
+    function uniformSeries(rows){
+      const pts=(rows||[]).filter(r=>Number.isFinite(r?.time)&&Number.isFinite(r?.v)).sort((a,b)=>a.time-b.time);if(pts.length<8)return null;
+      const gaps=[];for(let i=1;i<pts.length;i++){const d=pts[i].time-pts[i-1].time;if(d>0)gaps.push(d)}const step=median(gaps);if(!Number.isFinite(step)||step<5||step>100)return null;
+      const values=[];let j=0;for(let t=pts[0].time;t<=pts[pts.length-1].time&&values.length<1200;t+=step){while(j<pts.length-2&&pts[j+1].time<t)j++;const a=pts[j],b=pts[Math.min(j+1,pts.length-1)],span=b.time-a.time,k=span>0?Math.max(0,Math.min(1,(t-a.time)/span)):0;values.push(a.v+(b.v-a.v)*k)}
+      return {t0:pts[0].time,step,values}
+    }
+    function impactEnvelope(values,step){
+      const w=Math.max(1,Math.round(200/step)),e=Math.max(1,Math.round(40/step)),n=values.length,hp=values.map((v,i)=>{let s=0,c=0;for(let k=Math.max(0,i-w);k<=Math.min(n-1,i+w);k++){s+=values[k];c++}return v-s/c});
+      return hp.map((_,i)=>{let s=0,c=0;for(let k=Math.max(0,i-e);k<=Math.min(n-1,i+e);k++){s+=hp[k]*hp[k];c++}return Math.sqrt(s/c)})
+    }
+    function axlePairFeature(rows,{speedMps=null,profile=VEHICLE_PROFILES.car}={}){
+      const empty={pairFound:false,pairSpeedChecked:false,pairLagMs:null,pairRatio:null,pairDipRatio:null,impliedWheelbaseM:null,impactCount:0,pairInconsistent:false};
+      const s=uniformSeries(rows);if(!s)return {...empty,pairNote:'样本不足'};
+      const env=impactEnvelope(s.values,s.step),i1=env.indexOf(Math.max(...env)),top=env[i1],quiet=env.slice().sort((a,b)=>a-b)[Math.floor(env.length*.2)]||0,floor=Math.max(.35*top,3*quiet);
+      const peaks=[];for(let i=1;i<env.length-1;i++)if(env[i]>=env[i-1]&&env[i]>env[i+1]&&env[i]>=floor)peaks.push(i);
+      const v=Number(speedMps),speedChecked=Number.isFinite(v)&&v>=1.5,minMs=speedChecked?Math.max(100,profile.wheelbaseMin/v*1000):profile.genericMinMs,maxMs=speedChecked?Math.min(2500,profile.wheelbaseMax/v*1000):profile.genericMaxMs,mergeMs=Math.min(200,minMs*.8);
+      const clustered=[];for(const i of peaks){const last=clustered[clustered.length-1];if(last!==undefined&&(i-last)*s.step<mergeMs){if(env[i]>env[last])clustered[clustered.length-1]=i}else clustered.push(i)}
+      const search=(minMs,maxMs)=>{const kmin=Math.max(1,Math.round(minMs/s.step)),kmax=Math.round(maxMs/s.step);let best=null;for(const j of clustered){const k=Math.abs(j-i1);if(k<kmin||k>kmax)continue;const lo=Math.min(i1,j),hi=Math.max(i1,j),dip=Math.min(...env.slice(lo,hi+1)),ratio=env[j]/top,dipRatio=dip/env[j];if(ratio>=.35&&dipRatio<=.6&&(!best||env[j]>env[best.j]))best={j,ratio,dipRatio,lagMs:k*s.step}}return best};
+      const hit=search(minMs,maxMs),generic=!hit&&speedChecked?search(profile.genericMinMs*.6,2500):null;
+      if(!hit)return {...empty,impactCount:clustered.length,pairSpeedChecked:speedChecked,pairInconsistent:!!generic,pairNote:generic?`第二次冲击间隔 ${Math.round(generic.lagMs)} ms，按车速折算 ${(v*generic.lagMs/1000).toFixed(1)} m，与轴距不符`:'未见前后轮第二次冲击'};
+      return {pairFound:true,pairSpeedChecked:speedChecked,pairLagMs:hit.lagMs,pairRatio:hit.ratio,pairDipRatio:hit.dipRatio,impliedWheelbaseM:speedChecked?v*hit.lagMs/1000:null,impactCount:clustered.length,pairInconsistent:false,pairNote:speedChecked?`双冲击间隔 ${Math.round(hit.lagMs)} ms × 车速 ${v.toFixed(1)} m/s ≈ 轴距 ${(v*hit.lagMs/1000).toFixed(2)} m`:`双冲击间隔 ${Math.round(hit.lagMs)} ms（无可靠车速，未核对轴距）`}
+    }
+    function mountForwardPrior(up){if(!up)return null;const h=vecHorizontal({x:0,y:0,z:-1},up);return vecNorm(h)>=.6?vecUnit(h):null}
+    function principalAxis(cov){let v={x:1,y:.7,z:.4};for(let i=0;i<30;i++){v=vecUnit({x:cov[0]*v.x+cov[1]*v.y+cov[2]*v.z,y:cov[3]*v.x+cov[4]*v.y+cov[5]*v.z,z:cov[6]*v.x+cov[7]*v.y+cov[8]*v.z});if(!v)return null}const lambda=vecDot(v,{x:cov[0]*v.x+cov[1]*v.y+cov[2]*v.z,y:cov[3]*v.x+cov[4]*v.y+cov[5]*v.z,z:cov[6]*v.x+cov[7]*v.y+cov[8]*v.z}),trace=cov[0]+cov[4]+cov[8];return {axis:v,confidence:trace>0?lambda/trace:0}}
+    function forwardAxis(up,learned){
+      if(up&&learned&&learned.count>=4){const p=principalAxis(learned.cov);if(p&&p.confidence>=.75){const h=vecHorizontal(p.axis,up);if(vecNorm(h)>=.7)return {axis:vecUnit(h),source:'GPS加减速学习'}}}
+      const prior=mountForwardPrior(up);return prior?{axis:prior,source:'支架默认（屏幕朝向驾驶员）'}:{axis:null,source:'未知（手机近乎平放且未学到车头方向）'}
+    }
+    function rollPitchFeature(rows,up,forward){
+      const base={rollAvailable:false,rollRatio:null,rollRms:null,pitchRms:null,yawAvailable:false,yawRatio:null,yawRms:null},rms=a=>Math.sqrt(a.reduce((sum,v)=>sum+v*v,0)/a.length),rot=(rows||[]).filter(r=>r?.rot&&[r.rot.x,r.rot.y,r.rot.z].every(Number.isFinite));
+      if(!up)return {...base,rollNote:'缺少重力方向',yawNote:'缺少重力方向'};if(rot.length<6)return {...base,rollNote:'无陀螺仪数据',yawNote:'无陀螺仪数据'};
+      const yawRaw=rot.map(r=>vecDot(r.rot,up)),yb=median(yawRaw),yawRms=rms(yawRaw.map(v=>v-yb)),horiz=rot.map(r=>vecHorizontal(r.rot,up)),hb={x:median(horiz.map(h=>h.x)),y:median(horiz.map(h=>h.y)),z:median(horiz.map(h=>h.z))},horizRms=rms(horiz.map(h=>Math.hypot(h.x-hb.x,h.y-hb.y,h.z-hb.z)));
+      const yaw=Math.max(yawRms,horizRms)<1.5?{yawAvailable:false,yawRatio:null,yawRms,yawNote:'车把/车身转动太弱'}:{yawAvailable:true,yawRatio:yawRms/(yawRms+horizRms),yawRms,yawNote:`转向扰动占比 ${(yawRms/(yawRms+horizRms)*100).toFixed(0)}%`};
+      if(!forward?.axis)return {...base,...yaw,rollNote:forward?.source||'车头方向未知'};
+      const f=forward.axis,l=vecUnit(vecCross(up,f));if(!l)return {...base,...yaw,rollNote:'车头方向无效'};
+      const roll=rot.map(r=>vecDot(r.rot,f)),pitch=rot.map(r=>vecDot(r.rot,l)),rb=median(roll),pb=median(pitch),rollRms=rms(roll.map(v=>v-rb)),pitchRms=rms(pitch.map(v=>v-pb));
+      if(Math.max(rollRms,pitchRms)<1.5)return {...base,...yaw,rollRms,pitchRms,rollNote:'车身转动太弱，无法判断左右对称'};
+      return {...base,...yaw,rollAvailable:true,rollRatio:rollRms/(rollRms+pitchRms),rollRms,pitchRms,rollNote:`侧倾占比 ${(rollRms/(rollRms+pitchRms)*100).toFixed(0)}%（车头方向：${forward.source}）`}
+    }
+    function approachFeature(speedRows,eventTime){
+      const t=Number(eventTime),rows=(speedRows||[]).filter(r=>Number.isFinite(r?.time)&&Number.isFinite(r?.speed)&&r.time>=t-8000&&r.time<=t+1500);
+      const near=rows.filter(r=>Math.abs(r.time-t)<=3000).sort((a,b)=>Math.abs(a.time-t)-Math.abs(b.time-t))[0],prior=rows.filter(r=>r.time<=t-500);
+      if(!near)return {speedAtEventMps:null,priorMaxSpeedMps:null,preBrakeDropMps:null,speedSource:''};
+      const priorMax=prior.length?Math.max(...prior.map(r=>r.speed)):null;return {speedAtEventMps:near.speed,priorMaxSpeedMps:priorMax,preBrakeDropMps:priorMax===null?null:Math.max(0,priorMax-near.speed),speedSource:near.source||''}
+    }
+    function classifySubtype(kind,pair,rp,approach,profile=VEHICLE_PROFILES.car){
+      if(kind==='depression'||kind==='none')return {subtype:kind,subtypeLabel:'',speedBumpScore:null,subtypeReasons:[]};
+      let score=0;const why=[],add=(d,t)=>{score+=d;why.push(`${d>0?'+':''}${d} ${t}`)};
+      if(pair.pairFound)add(pair.pairSpeedChecked?2:1,pair.pairNote);else if(pair.pairInconsistent)add(-2,`${pair.pairNote}，可能是两处独立不平`);else add(-1,pair.pairNote||'未见第二次冲击');
+      if(pair.impactCount>=5){add(-2,`窗口内 ${pair.impactCount} 次冲击，更像连续颠簸/破损路面`);return {subtype:'rough',subtypeLabel:'连续颠簸候选（多次冲击，非单一凸起）',speedBumpScore:score,subtypeReasons:why}}
+      const symmetric=profile.twoTrack&&rp.rollAvailable;
+      const steady=!profile.twoTrack&&rp.yawAvailable&&rp.yawRatio<=.25,steered=!profile.twoTrack&&rp.yawAvailable&&rp.yawRatio>=.45;
+      if(!profile.twoTrack){if(!rp.yawAvailable)why.push(`0 两轮车无法用侧倾判断左右对称；${rp.yawNote}`);else if(steady)add(1,`车把无明显转向扰动（${rp.yawNote}），符合垂直横跨的减速带`);else if(steered)add(-2,`车把出现明显转向扰动（${rp.yawNote}），疑似窄小/斜向凸起`);else why.push(`0 ${rp.yawNote}，介于两者之间`)}
+      else if(!rp.rollAvailable)why.push(`0 ${rp.rollNote}`);
+      else if(rp.rollRatio<=.35)add(2,`俯仰为主，${rp.rollNote}，符合横跨车道`);
+      else if(rp.rollRatio>=.55)add(-3,`侧倾明显，${rp.rollNote}，疑似单侧凸起`);
+      else why.push(`0 ${rp.rollNote}，介于两者之间`);
+      const v=approach.speedAtEventMps,drop=approach.preBrakeDropMps;
+      if(Number.isFinite(drop)&&drop>=1.5)add(1,`通过前 8 秒内减速 ${drop.toFixed(1)} m/s`);
+      else if(Number.isFinite(v)&&v<=6)add(1,`低速通过（${(v*3.6).toFixed(0)} km/h）`);
+      else if(Number.isFinite(v)&&v>=14)add(-1,`较高速度通过且未明显减速（${(v*3.6).toFixed(0)} km/h）`);
+      else if(!Number.isFinite(v))why.push('0 无可靠车速');
+      let subtype='bump_unresolved',label='凸起型响应候选（减速带/局部凸起未能区分）';
+      if(symmetric&&rp.rollRatio>=.55&&kind==='protrusion'){subtype='local_bump';label='局部凸起型响应候选（车身侧倾明显，疑似单侧）'}
+      else if(steered&&kind==='protrusion'){subtype='local_bump';label='局部凸起型响应候选（车把转向扰动明显，疑似窄小/斜向凸起）'}
+      else if(score>=4&&symmetric&&rp.rollRatio<=.35&&pair.pairSpeedChecked){subtype='speed_bump';label='减速带型响应候选（前后轮双冲击 + 俯仰为主）'}
+      else if(score>=4&&steady&&pair.pairSpeedChecked){subtype='speed_bump';label='减速带型响应候选（前后轮双冲击 + 车把无转向扰动）'}
+      else if(score>=3){subtype='speed_bump_possible';label='疑似减速带（证据不完整）'}
+      if(kind==='unknown'&&subtype!=='speed_bump_possible'&&subtype!=='speed_bump')return {subtype:'unknown',subtypeLabel:'',speedBumpScore:score,subtypeReasons:why};
+      if(kind==='unknown')label=`${label}；单次响应形状不明`;
+      return {subtype,subtypeLabel:label,speedBumpScore:score,subtypeReasons:why}
+    }
+    function demoCrossingRows(type,{lag=675,rearScale=.8,extraHits=[],speed=4}={}){
+      const front=type==='depression'?[0,-.5,-1.5,-3.8,-6.4,-4.9,-2,.3,2.4,5.1,3.2,1,0,0]:[0,.5,1.4,3.5,6.6,5.2,2.4,.2,-1.8,-4.8,-3.1,-1,0,0],step=24,t0=240,up={x:0,y:1,z:0},fwd={x:0,y:0,z:-1},lat={x:-1,y:0,z:0};
+      const pitchAmp=type==='local_bump'?7:13,rollAmp=type==='local_bump'?13:1.5,yawAmp=type==='local_bump'?18:1,hits=[[t0+lag,rearScale],...extraHits].filter(h=>h[1]),end=Math.max(1700,...hits.map(h=>h[0]+500)),rows=[];let seed=11;const rnd=()=>{seed=(seed*16807)%2147483647;return seed/2147483647-.5};
+      const at=(t,start,scale)=>{const k=Math.round((t-start)/step);return k>=0&&k<front.length?front[k]*scale:0};
+      for(let t=0;t<=end;t+=step){const a=at(t,t0,1),b=hits.reduce((sum,h)=>sum+at(t,h[0],h[1]),0),v=a+b+rnd()*.25,pitch=(a-b)/6.6*pitchAmp,roll=(a+b)/6.6*rollAmp,yaw=Math.abs(a+b)/6.6*yawAmp;rows.push({time:t,v,rot:{x:pitch*lat.x+roll*fwd.x+yaw*up.x+rnd()*.3,y:pitch*lat.y+roll*fwd.y+yaw*up.y+rnd()*.3,z:pitch*lat.z+roll*fwd.z+yaw*up.z+rnd()*.3}})}
+      return {rows,up,front,frontTimes:front.map((_,i)=>t0+i*step),baselineValues:rows.filter(r=>r.time<t0).map(r=>r.v),approach:{speedAtEventMps:speed,priorMaxSpeedMps:speed+3,preBrakeDropMps:3,speedSource:'模拟'}}
+    }
+    function inspectMotion(linear,incl,rotation,gravity){
+      const lm=vecNorm(linear),gm=vecNorm(incl),rm=rotation?Math.max(Math.abs(rotation.x||0),Math.abs(rotation.y||0),Math.abs(rotation.z||0)):0;
+      if(Number.isFinite(gm)&&gm<2.5)return {artifact:true,quality:'疑似自由落体，已剔除',value:null};
+      if((Number.isFinite(gm)&&gm>ARTIFACT_LIMIT)||(Number.isFinite(lm)&&lm>ARTIFACT_LIMIT))return {artifact:true,quality:'极端冲击/抛掷疑似，已剔除',value:null};
+      if(rm>1200)return {artifact:true,quality:'异常高速旋转，已剔除',value:null};
+      if(!incl||!gravity)return {artifact:false,quality:'缺少含重力方向，不能判凸凹',value:null};
+      const g=vecNorm(gravity);if(!Number.isFinite(g)||g<6||g>13)return {artifact:false,quality:'重力方向尚未稳定',value:null};
+      const up={x:gravity.x/g,y:gravity.y/g,z:gravity.z/g};
+      const dyn=linear||{x:incl.x-gravity.x,y:incl.y-gravity.y,z:incl.z-gravity.z};
+      const value=dyn.x*up.x+dyn.y*up.y+dyn.z*up.z;
+      return Number.isFinite(value)?{artifact:false,quality:'有效竖直分量',value}:{artifact:false,quality:'信号无效',value:null}
+    }
+    function persist(){try{localStorage.setItem(STORE,JSON.stringify(state.records.filter(r=>r.source==='field').slice(0,2000)))}catch(_){toast('事件存储空间不足，请立即导出 Excel') }}
+    function load(){try{let saved=JSON.parse(localStorage.getItem(STORE)||'null');if(!Array.isArray(saved)){const old=JSON.parse(localStorage.getItem('roadaura_demo_records_v2')||'[]');saved=Array.isArray(old)?old:[];if(saved.length)toast('已导入旧版本事件；旧记录不含原始高频采样')}state.records=saved.map(r=>({...r,pattern:r.pattern||'旧版无正负波形分类',quality:r.quality||'旧版记录未保存全量传感器样本'}));state.serial=state.records.reduce((m,r)=>Math.max(m,Number(String(r.id).match(/(\d+)$/)?.[1]||0)+1),1);if(!localStorage.getItem(STORE))persist()}catch(_){state.records=[]}renderRecords()}
+    function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+    function renderRecords(){const el=$('events');if(!el)return;$('event-count').textContent=`${state.records.length} 条`;if(!state.records.length){el.innerHTML='<div class="empty">还没有事件。开始演示或实地采集后，候选记录会显示在这里。</div>';renderMap();return}el.innerHTML=state.records.slice(0,50).map(r=>`<article class="event"><div class="event-marker">${esc(eventNumber(r))}</div><div class="event-main"><div class="event-title">${esc(r.label)}</div><div class="event-meta">${esc(r.id)} · ${esc(r.timeLabel)} · 峰值 ${esc(r.peak)} m/s² · ${esc(r.pattern||'')} · ${esc(r.locationLabel)}</div>${r.subtypeReasons?.length?`<div class="event-evidence">细分依据：${esc(r.subtypeReasons.join('；'))}</div>`:''}<div class="event-evidence">${esc(r.evidence||'特征未保存')} · 人工复核：${esc(r.reviewLabel||'待复核')}${r.source==='field'&&(r.gps||r.gpsRaw)?` · <button type="button" class="map-focus" data-focus-event="${esc(r.id)}">本页定位 ${esc(eventNumber(r))} 号点</button> · <a href="${esc(amapMarkerUrl(r.gps||r.gpsRaw,`事件 ${eventNumber(r)}`))}" target="_blank" rel="noopener noreferrer" referrerpolicy="no-referrer">${r.gps?'在高德查看':'查看原始 GPS（低精度）'} ${esc(eventNumber(r))} 号点</a>`:''}</div></div><span class="event-tag">${r.source==='demo'?'模拟':'实采'}</span><select class="review-select" data-review-id="${esc(r.id)}" aria-label="复核事件 ${esc(eventNumber(r))}"><option value="" ${!r.reviewLabel?'selected':''}>待复核</option><option value="speed_bump" ${r.reviewLabel==='speed_bump'?'selected':''}>确认减速带</option><option value="protrusion" ${r.reviewLabel==='protrusion'?'selected':''}>确认凸起（非减速带）</option><option value="depression" ${r.reviewLabel==='depression'?'selected':''}>确认凹陷</option><option value="other" ${r.reviewLabel==='other'?'selected':''}>其他异常</option><option value="false_alarm" ${r.reviewLabel==='false_alarm'?'selected':''}>误报</option></select></article>`).join('');renderMap()}
+    function reviewRecord(id,label){const r=state.records.find(item=>item.id===id);if(!r)return;r.reviewLabel=['speed_bump','protrusion','depression','other','false_alarm'].includes(label)?label:'';r.reviewedAt=r.reviewLabel?new Date().toISOString():'';persist();renderRecords();toast(r.reviewLabel?'人工复核标签已保存；算法原判保留':'已恢复为待复核')}
+    function dbOpen(){if(!('indexedDB'in window))return Promise.resolve(null);return new Promise(resolve=>{try{const req=indexedDB.open(DB_NAME,DB_VERSION);req.onupgradeneeded=()=>{const db=req.result;if(!db.objectStoreNames.contains('samples'))db.createObjectStore('samples',{autoIncrement:true});if(!db.objectStoreNames.contains('gps'))db.createObjectStore('gps',{autoIncrement:true})};req.onsuccess=()=>resolve(req.result);req.onerror=()=>resolve(null)}catch(_){resolve(null)}})}
+    const dbPromise=dbOpen();dbPromise.then(db=>{state.dbAvailable=!!db});
+    function dbWrite(store,rows){return dbPromise.then(db=>new Promise(resolve=>{if(!db||!rows.length){resolve(!rows.length);return}try{const tx=db.transaction(store,'readwrite'),os=tx.objectStore(store);rows.forEach(row=>os.add(row));tx.oncomplete=()=>resolve(true);tx.onerror=()=>resolve(false);tx.onabort=()=>resolve(false)}catch(_){resolve(false)}}))}
+    function dbRead(store){return dbPromise.then(db=>new Promise(resolve=>{if(!db){resolve(null);return}try{const req=db.transaction(store,'readonly').objectStore(store).getAll();req.onsuccess=()=>resolve(req.result||[]);req.onerror=()=>resolve(null)}catch(_){resolve(null)}}))}
+    function dbClear(){return dbPromise.then(db=>new Promise(resolve=>{if(!db){resolve(false);return}try{const tx=db.transaction(['samples','gps'],'readwrite');tx.objectStore('samples').clear();tx.objectStore('gps').clear();tx.oncomplete=()=>resolve(true);tx.onerror=()=>resolve(false)}catch(_){resolve(false)}}))}
+    function queueSample(row){state.recentSamples.push(row);if(state.recentSamples.length>8000)state.recentSamples.shift();if(row.source==='demo'){state.demoSamples.push(row);return}if(state.dbAvailable===false)state.fieldFallbackSamples.push(row);else state.sampleBatch.push(row);if(state.sampleBatch.length>=40)flushSamples()}
+    function flushSamples(){if(!state.sampleBatch.length)return state.writeQueue;const rows=state.sampleBatch.splice(0);state.writeQueue=state.writeQueue.then(async()=>{const ok=await dbWrite('samples',rows);if(!ok){state.dbFailed=true;state.fieldFallbackSamples.push(...rows)}});return state.writeQueue}
+    function queueGps(row){if(state.dbAvailable===false)state.gpsFallback.push(row);else state.gpsBatch.push(row);if(state.gpsBatch.length>=5)flushGps()}
+    function flushGps(){if(!state.gpsBatch.length)return state.writeQueue;const rows=state.gpsBatch.splice(0);state.writeQueue=state.writeQueue.then(async()=>{const ok=await dbWrite('gps',rows);if(!ok){state.dbFailed=true;state.gpsFallback.push(...rows)}});return state.writeQueue}
+    function storeSample(data){const time=data.time||Date.now(),raw=data.source==='field'&&state.rawGps&&Math.abs(time-state.rawGps.timestamp)<=5000?state.rawGps:null,good=data.source==='field'&&state.gps&&Math.abs(time-state.gps.timestamp)<=5000&&(!raw||raw.accepted!==false||raw.timestamp<state.gps.timestamp)?state.gps:null;const row={index:state.recentSamples.length+1,source:data.source||'field',timestamp:new Date(time).toISOString(),ax:data.ax??'',ay:data.ay??'',az:data.az??'',gax:data.gax??'',gay:data.gay??'',gaz:data.gaz??'',rx:data.rx??'',ry:data.ry??'',rz:data.rz??'',vertical:data.vertical??'',magnitude:data.magnitude??'',threshold:data.threshold??BASE_THRESHOLD,quality:data.quality||'',latRaw:raw?.lat??'',lngRaw:raw?.lng??'',accuracy:raw?.accuracy??'',latCorrected:good?.lat??'',lngCorrected:good?.lng??'',latMap:good?.lat??'',lngMap:good?.lng??'',coordinateNote:'原始/平滑坐标为 WGS-84；本地示意图同坐标',gpsTimestamp:raw?.timestamp?new Date(raw.timestamp).toISOString():'',gpsAgeMs:raw?.timestamp?Math.max(0,time-raw.timestamp):''};queueSample(row)}
+    function locationAtTime(time,rows=state.gpsTrack,fallbackRaw=state.rawGps,fallbackGood=state.gps){
+      const target=Number(time),parsed=(rows||[]).map(r=>({...r,_time:Date.parse(r.timestamp)})).filter(r=>Number.isFinite(r._time)&&Math.abs(r._time-target)<=5000),good=parsed.filter(r=>r.accepted==='是'&&Number(r.accuracy)<=GPS_ACCURACY_LIMIT&&Number.isFinite(Number(r.correctedLat))&&Number.isFinite(Number(r.correctedLng))).sort((a,b)=>a._time-b._time);let gps=null;
+      const beforeRows=good.filter(r=>r._time<=target),before=beforeRows[beforeRows.length-1],after=good.find(r=>r._time>=target);
+      if(before&&after&&before!==after&&after._time-before._time<=10000){const ratio=(target-before._time)/(after._time-before._time),lat=Number(before.correctedLat)+(Number(after.correctedLat)-Number(before.correctedLat))*ratio,dlng=((Number(after.correctedLng)-Number(before.correctedLng)+540)%360)-180,lng=Number(before.correctedLng)+dlng*ratio;gps={lat,lng,accuracy:Math.max(Number(before.accuracy),Number(after.accuracy)),timestamp:target,speedMps:Number.isFinite(Number(after.speed))?Number(after.speed):null,interpolated:true}}
+      if(!gps&&good.length){const nearest=good.sort((a,b)=>Math.abs(a._time-target)-Math.abs(b._time-target))[0];gps={lat:Number(nearest.correctedLat),lng:Number(nearest.correctedLng),accuracy:Number(nearest.accuracy),timestamp:nearest._time,speedMps:Number.isFinite(Number(nearest.speed))?Number(nearest.speed):null}}
+      if(!gps&&fallbackGood&&Number.isFinite(Number(fallbackGood.timestamp))&&Math.abs(Number(fallbackGood.timestamp)-target)<=5000&&Number(fallbackGood.accuracy)<=GPS_ACCURACY_LIMIT)gps={...fallbackGood};
+      const rawRows=parsed.filter(r=>Number.isFinite(Number(r.rawLat))&&Number.isFinite(Number(r.rawLng))).sort((a,b)=>Math.abs(a._time-target)-Math.abs(b._time-target));let raw=rawRows.length?{lat:Number(rawRows[0].rawLat),lng:Number(rawRows[0].rawLng),accuracy:Number(rawRows[0].accuracy),timestamp:rawRows[0]._time,accepted:rawRows[0].accepted==='是'}:null;
+      if(!raw&&fallbackRaw&&Number.isFinite(Number(fallbackRaw.timestamp))&&Math.abs(Number(fallbackRaw.timestamp)-target)<=5000)raw={...fallbackRaw};return {gps,raw}
+    }
+    function addRecord({label,peak,signedPeak,pattern,kind,subtype='',subtypeReasons=[],source='demo',startTime,endTime,eventTime,sampleCount,quality='启发式候选；未验证',features=null,evidence=''}){
+      const recordMs=source==='field'&&Number.isFinite(Number(eventTime))?Number(eventTime):Date.now(),now=new Date(recordMs),fix=source==='field'?locationAtTime(recordMs):{gps:null,raw:null},raw=fix.raw,gps=fix.gps,id=(source==='demo'?'S-':'F-')+String(state.serial++).padStart(4,'0');
+      const rec={id,source,timestamp:now.toISOString(),timeLabel:now.toLocaleTimeString('zh-CN',{hour12:false}),label,peak:Number(peak).toFixed(2),signedPeak:Number(signedPeak||0).toFixed(2),pattern,kind:kind||'unknown',subtype:subtype||'',subtypeReasons:Array.isArray(subtypeReasons)?subtypeReasons:[],startTime:startTime||now.toISOString(),endTime:endTime||now.toISOString(),sampleCount:sampleCount||0,quality,features:features||null,evidence,gps:gps?{lat:gps.lat,lng:gps.lng,accuracy:gps.accuracy}:null,gpsRaw:raw?{lat:raw.lat,lng:raw.lng,accuracy:raw.accuracy}:null,locationLabel:gps?`${gps.lat.toFixed(6)}, ${gps.lng.toFixed(6)}（WGS-84${gps.interpolated?'事件时刻插值':'最近有效定位'}；±${Math.round(gps.accuracy)}m）`:raw?'仅有低可信原始 GPS；未用于编号打点':'位置未获取'};
+      state.records.unshift(rec);if(source==='field'&&(rec.gps||rec.gpsRaw)){state.focusedEventId=id;const point=rec.gps||rec.gpsRaw;state.mapCenter={lat:point.lat,lng:point.lng};state.autoCenter=true;state.mapGridKey=null;if(state.mapReady&&state.map)state.map.jumpTo({center:[point.lng,point.lat],zoom:state.mapZoom})}$('last-value').textContent=`${rec.peak} m/s²`;persist();renderRecords();$('capture-state').textContent='有事件待复核';return rec
+    }
+    function currentProfile(){return VEHICLE_PROFILES[$('vehicle-profile')?.value]||VEHICLE_PROFILES.bike}
+    function recentSpeed(time=Date.now()){const r=state.speedHist[state.speedHist.length-1];return r&&Math.abs(time-r.time)<=3000?r.speed:null}
+    function finishEvent(){if(!state.active)return;const ev=state.active;state.active=null;const valid=ev.samples.filter(s=>Number.isFinite(s.value)),vals=valid.map(s=>s.value),times=valid.map(s=>s.time),peak=Math.max(0,...vals.map(Math.abs));if(vals.length<5||peak<BASE_THRESHOLD)return;const result=classifyResponse(vals,ev.threshold,times,ev.baselineValues);if(result.kind==='none')return;
+      const seg={start:ev.start,end:ev.end,result,peak,signedPeak:vals.reduce((best,v)=>Math.abs(v)>Math.abs(best)?v:best,0),sampleCount:vals.length,quality:ev.quality},pending=state.pendingCrossing;
+      if(pending&&seg.start<=pending.deadline&&pending.segments.length<8){pending.segments.push(seg);pending.end=Math.max(pending.end,seg.end);pending.deadline=Math.min(pending.start+4000,Math.max(pending.deadline,seg.end+pending.windowMs+150));clearTimeout(state.crossingTimer);state.crossingTimer=setTimeout(()=>finalizeCrossing(),Math.max(0,pending.deadline-Date.now())+650);return}
+      if(pending)finalizeCrossing(true);
+      const profile=currentProfile(),v=recentSpeed(ev.end),maxMs=Number.isFinite(v)&&v>=1.5?Math.min(2500,profile.wheelbaseMax/v*1000):profile.genericMaxMs;
+      state.pendingCrossing={segments:[seg],start:seg.start,end:seg.end,deadline:seg.end+maxMs+150,windowMs:maxMs,profile};clearTimeout(state.crossingTimer);state.crossingTimer=setTimeout(()=>finalizeCrossing(),maxMs+800);$('capture-state').textContent='等待后轮冲击以判断减速带…'
+    }
+    function finalizeCrossing(force=false){
+      const p=state.pendingCrossing;if(!p)return;if(!force&&state.active&&state.active.start<=p.deadline){clearTimeout(state.crossingTimer);state.crossingTimer=setTimeout(()=>finalizeCrossing(),400);return}
+      state.pendingCrossing=null;clearTimeout(state.crossingTimer);
+      const lead=p.segments.find(s=>s.result.kind!=='unknown')||p.segments[0],strongest=p.segments.reduce((a,b)=>b.peak>a.peak?b:a),eventTime=(p.segments[0].start+p.segments[0].end)/2;
+      const rows=state.motionBuf.filter(r=>r.time>=p.start-600&&r.time<=p.deadline+300),approach=approachFeature(state.speedHist,eventTime),v=approach.speedAtEventMps;
+      const pair=axlePairFeature(rows,{speedMps:v,profile:p.profile}),up=state.gravity?vecUnit(state.gravity):null,fwd=forwardAxis(up,state.fwdLearn),rp=rollPitchFeature(rows,up,fwd);
+      const stationary=Number.isFinite(v)&&v<.5,sub=stationary?{subtype:'unknown',subtypeLabel:'',speedBumpScore:null,subtypeReasons:['GPS显示近静止，暂不判道路形状']}:classifySubtype(lead.result.kind,pair,rp,approach,p.profile);
+      const label=stationary?'近静止振动候选（需排除手持/车内扰动）':sub.subtypeLabel||lead.result.label,quality=lead.quality+' + 前后轮双冲击/侧倾/过前减速细分'+(stationary?'；GPS显示近静止，暂不判道路形状':'');
+      addRecord({label,peak:strongest.peak,signedPeak:strongest.signedPeak,pattern:lead.result.pattern+(p.segments.length>1?` · ${p.segments.length} 段越阈`:''),kind:stationary?'unknown':lead.result.kind,subtype:sub.subtype,subtypeReasons:sub.subtypeReasons,source:'field',startTime:new Date(p.start).toISOString(),endTime:new Date(p.end).toISOString(),sampleCount:p.segments.reduce((n,s)=>n+s.sampleCount,0),quality,features:{...lead.result.features,gpsSpeedMps:v,...approach,...pair,...rp,forwardSource:fwd.source,speedBumpScore:sub.speedBumpScore,vehicleProfile:p.profile.name,segmentCount:p.segments.length},evidence:lead.result.evidence+(Number.isFinite(v)?` · 车速 ${v.toFixed(1)} m/s`:''),eventTime});
+      toast(`已记录${label}；需人工复核`)
+    }
+    function handleVertical(value,time,quality){
+      const threshold=currentThreshold();
+      pushWave(value,false);
+      const row=state.lastRaw||{};storeSample({source:'field',time,ax:row.ax,ay:row.ay,az:row.az,gax:row.gax,gay:row.gay,gaz:row.gaz,rx:row.rx,ry:row.ry,rz:row.rz,vertical:value,magnitude:row.magnitude,threshold,quality,latRaw:state.gps?.raw?.lat,lngRaw:state.gps?.raw?.lng,accuracy:state.gps?.accuracy,latCorrected:state.gps?.lat,lngCorrected:state.gps?.lng});
+      if(time<state.rejectUntil){if(state.active)state.active=null;return}
+      if(!Number.isFinite(value))return;
+      state.motionBuf.push({time,v:value,rot:state.lastMotion?.rot||null,dyn:state.lastMotion?.dyn||null});while(state.motionBuf.length&&time-state.motionBuf[0].time>12000)state.motionBuf.shift();
+      state.history=state.history||[];state.history.push({value,time});if(state.history.length>14)state.history.shift();
+      if(!state.active&&Math.abs(value)>=threshold){const seed=state.history.filter(s=>time-s.time<=250);state.active={samples:seed.slice(),baselineValues:seed.filter(s=>s.time<time).slice(-8).map(s=>s.value),peak:Math.abs(value),start:seed[0]?.time||time,end:time,lastExcursion:time,threshold,quality:'重力投影 + 校准MAD阈值 + 双峰时序规则'};return}
+      if(state.active){state.active.samples.push({value,time});state.active.end=time;state.active.peak=Math.max(state.active.peak,Math.abs(value));if(Math.abs(value)>=threshold*.4)state.active.lastExcursion=time;if(time-state.active.lastExcursion>380)finishEvent();else if(time-state.active.start>2200)finishEvent()}
+    }
+    function onMotion(e){
+      if(!state.running)return;
+      const time=Date.now(),incl=vecFrom(e.accelerationIncludingGravity),linear=vecFrom(e.acceleration),rotation=rotationFrom(e.rotationRate);
+      const linearMagnitude=vecNorm(linear);
+      const raw={ax:linear?.x??'',ay:linear?.y??'',az:linear?.z??'',gax:incl?.x??'',gay:incl?.y??'',gaz:incl?.z??'',magnitude:Number.isFinite(linearMagnitude)?linearMagnitude:vecNorm(incl),rx:rotation?.x??'',ry:rotation?.y??'',rz:rotation?.z??''};
+      state.lastRaw=raw;
+      if(incl){if(!state.gravity)state.gravity={...incl};else{const dt=Math.max(.01,Math.min(.5,(time-(state.lastMotionAt||time-40))/1000)),alpha=dt/(1.8+dt);state.gravity={x:state.gravity.x*(1-alpha)+incl.x*alpha,y:state.gravity.y*(1-alpha)+incl.y*alpha,z:state.gravity.z*(1-alpha)+incl.z*alpha}}}
+      const check=inspectMotion(linear,incl,rotation,state.gravity);state.lastMotionAt=time;state.lastMotion={rot:rotation,dyn:linear||(incl&&state.gravity?{x:incl.x-state.gravity.x,y:incl.y-state.gravity.y,z:incl.z-state.gravity.z}:null)};
+      if(check.artifact){
+        state.artifactCount++;state.rejectUntil=time+1300;state.active=null;
+        pushWave(null,true,(linear?.z||incl?.z||1)<0?-1:1);
+        storeSample({source:'field',time,...raw,vertical:'',threshold:BASE_THRESHOLD,quality:check.quality,latRaw:state.gps?.raw?.lat,lngRaw:state.gps?.raw?.lng,accuracy:state.gps?.accuracy,latCorrected:state.gps?.lat,lngCorrected:state.gps?.lng});
+        state.calibrating=true;state.calibration=[];state.calibrationStart=time;state.gravity=null;state.noiseMad=0;state.lastVertical=null;state.previousTime=0;state.history=[];
+        $('capture-state').textContent=`异常样本已剔除 ${state.artifactCount} 次；重新校准中`;
+        return;
+      }
+      if(state.calibrating){
+        if(incl)state.calibration.push({incl,linear,time});
+        storeSample({source:'field',time,...raw,vertical:'',threshold:BASE_THRESHOLD,quality:check.quality==='有效竖直分量'?'建立基线中':check.quality,latRaw:state.gps?.raw?.lat,lngRaw:state.gps?.raw?.lng,accuracy:state.gps?.accuracy,latCorrected:state.gps?.lat,lngCorrected:state.gps?.lng});
+        pushWave(0);
+        if(time-state.calibrationStart>=1800&&state.calibration.length>=8){
+          const incls=state.calibration.map(s=>s.incl).filter(Boolean);
+          if(incls.length>=8){
+            state.gravity={x:incls.reduce((sum,v)=>sum+v.x,0)/incls.length,y:incls.reduce((sum,v)=>sum+v.y,0)/incls.length,z:incls.reduce((sum,v)=>sum+v.z,0)/incls.length};
+            const gn=vecNorm(state.gravity),spread=Math.sqrt(state.calibration.reduce((sum,s)=>sum+(s.incl.x-state.gravity.x)**2+(s.incl.y-state.gravity.y)**2+(s.incl.z-state.gravity.z)**2,0)/incls.length);
+            if(!Number.isFinite(gn)||gn<7||gn>12||spread>1.5){state.gravity=null;state.noiseMad=0;state.calibration=[];state.calibrationStart=time;$('capture-state').textContent='基线不稳定，请静置';toast('手机或车辆仍在移动；保持稳定后自动重试基线');return}
+            const up={x:state.gravity.x/gn,y:state.gravity.y/gn,z:state.gravity.z/gn};if(state.fwdLearn.up&&vecDot(state.fwdLearn.up,up)<Math.cos(15*Math.PI/180))state.fwdLearn={cov:[0,0,0,0,0,0,0,0,0],count:0,up:null};
+            const calValues=state.calibration.map(s=>{const v=s.linear||(s.incl?{x:s.incl.x-state.gravity.x,y:s.incl.y-state.gravity.y,z:s.incl.z-state.gravity.z}:null);return v?v.x*up.x+v.y*up.y+v.z*up.z:null}).filter(Number.isFinite);
+            const calMed=median(calValues);state.noiseMad=median(calValues.map(v=>Math.abs(v-calMed)))||0;state.calibrating=false;
+            $('capture-state').textContent='传感器采集中；GPS状态见地图';toast(`基线完成：噪声MAD ${state.noiseMad.toFixed(2)} m/s²`);
+          }else{$('capture-state').textContent='缺少重力方向';toast('设备未提供含重力三轴，不能可靠区分向上/向下');state.calibrating=false}
+          state.calibration=[];
+        }
+        return;
+      }
+      if(time<state.rejectUntil){pushWave(null,true,1);storeSample({source:'field',time,...raw,vertical:'',threshold:BASE_THRESHOLD,quality:'冲击后保护窗，已抑制',latRaw:state.gps?.raw?.lat,lngRaw:state.gps?.raw?.lng,accuracy:state.gps?.accuracy,latCorrected:state.gps?.lat,lngCorrected:state.gps?.lng});return}
+      const value=check.value;
+      if(!Number.isFinite(value)){pushWave(null,false);storeSample({source:'field',time,...raw,vertical:'',threshold:BASE_THRESHOLD,quality:check.quality,latRaw:state.gps?.raw?.lat,lngRaw:state.gps?.raw?.lng,accuracy:state.gps?.accuracy,latCorrected:state.gps?.lat,lngCorrected:state.gps?.lng});return}
+      if(state.lastVertical!==null&&state.previousTime){const dt=Math.max(.01,(time-state.previousTime)/1000),jerk=Math.abs(value-state.lastVertical)/dt;if(jerk>2800&&Math.abs(value)>20){state.artifactCount++;state.rejectUntil=time+900;state.active=null;pushWave(null,true,value<0?-1:1);storeSample({source:'field',time,...raw,vertical:value,magnitude:raw.magnitude,threshold:BASE_THRESHOLD,quality:'极端瞬态冲击，已剔除',latRaw:state.gps?.raw?.lat,lngRaw:state.gps?.raw?.lng,accuracy:state.gps?.accuracy,latCorrected:state.gps?.lat,lngCorrected:state.gps?.lng});state.calibrating=true;state.calibration=[];state.calibrationStart=time;state.gravity=null;state.lastVertical=null;state.previousTime=0;state.history=[];$('capture-state').textContent='瞬态异常已剔除；重新校准中';return}}
+      state.previousTime=time;state.lastVertical=value;handleVertical(value,time,check.quality);
+    }
+    function haversine(a,b){const R=6371000,rad=x=>x*Math.PI/180,dLat=rad(b.lat-a.lat),dLng=rad(b.lng-a.lng),v=Math.sin(dLat/2)**2+Math.cos(rad(a.lat))*Math.cos(rad(b.lat))*Math.sin(dLng/2)**2;return 2*R*Math.asin(Math.sqrt(v))}
+    function gpsDisposition(previous,raw,elapsed){
+      if(!Number.isFinite(raw.lat)||!Number.isFinite(raw.lng)||Math.abs(raw.lat)>90||Math.abs(raw.lng)>180)return {accept:false,status:'无效坐标，已忽略'};
+      if(Number.isFinite(raw.timestamp)&&Math.abs(Date.now()-raw.timestamp)>120000)return {accept:false,status:'定位时间过旧，已忽略'};
+      if(previous&&elapsed<=0)return {accept:false,status:'重复或乱序定位，已忽略'};
+      if(!Number.isFinite(raw.accuracy)||raw.accuracy<=0||raw.accuracy>GPS_ACCURACY_LIMIT)return {accept:false,status:'定位精度较低，仅显示原始点'};
+      if(previous&&elapsed>0&&elapsed<120){const speed=haversine(previous,raw)/elapsed;if(speed>MAX_GPS_SPEED)return {accept:false,status:`疑似 GPS 跳点（${speed.toFixed(1)} m/s）`,speed}}
+      return {accept:true,status:'有效定位',speed:previous&&elapsed>0&&elapsed<120?haversine(previous,raw)/elapsed:null}
+    }
+    function recordSpeed(t,raw,decision){
+      const speed=Number.isFinite(raw.doppler)?raw.doppler:Number.isFinite(decision.speed)?decision.speed:null;if(!Number.isFinite(speed))return;
+      state.speedHist.push({time:t,speed,source:Number.isFinite(raw.doppler)?'GPS多普勒':'坐标差分'});while(state.speedHist.length>120)state.speedHist.shift();
+      if(Number.isFinite(raw.doppler))learnForward(t,raw.doppler,raw.heading)
+    }
+    function learnForward(t,speed,heading){
+      const prev=state.lastDoppler;state.lastDoppler={time:t,speed,heading};if(!prev||!state.gravity||state.calibrating)return;const dt=(t-prev.time)/1000;if(dt<.5||dt>3)return;
+      if(Number.isFinite(heading)&&Number.isFinite(prev.heading)&&Math.abs(((heading-prev.heading+540)%360)-180)>20)return;const a=(speed-prev.speed)/dt;if(Math.abs(a)<.6)return;
+      const up=vecUnit(state.gravity),rows=state.motionBuf.filter(r=>r.dyn&&r.time>=prev.time&&r.time<=t);if(!up||rows.length<10)return;
+      const m=rows.reduce((acc,r)=>({x:acc.x+r.dyn.x,y:acc.y+r.dyn.y,z:acc.z+r.dyn.z}),{x:0,y:0,z:0}),h=vecHorizontal({x:m.x/rows.length,y:m.y/rows.length,z:m.z/rows.length},up),n=vecNorm(h);if(!(n>=.25))return;
+      const u=[h.x/n,h.y/n,h.z/n],c=state.fwdLearn.cov;for(let i=0;i<3;i++)for(let j=0;j<3;j++)c[i*3+j]+=u[i]*u[j]*n;state.fwdLearn.count++;if(!state.fwdLearn.up)state.fwdLearn.up=up
+    }
+    function gpsError(err){
+      const msg=!window.isSecureContext?'定位需要 HTTPS 或 localhost':!navigator.geolocation?'此浏览器未提供网页定位接口；请用支持定位的浏览器打开 HTTPS 页面':err?.code===1?'定位权限被拒绝；请在浏览器及系统设置中允许此页面定位':err?.code===2?'系统暂时无法获取位置；请检查系统定位开关与网络':err?.code===3?'定位超时；可移到开阔处后重试':'定位不可用；请检查浏览器权限';
+      state.gpsErrorText=msg;
+      $('gps-status').innerHTML='<b>GPS：</b>'+esc(msg);toast(msg);renderMap()
+    }
+    function startGpsWatch(){
+      if(!navigator.geolocation){gpsError();return}
+      const options={enableHighAccuracy:true,maximumAge:1000,timeout:15000};
+      const fail=err=>{
+        if(state.running&&options.enableHighAccuracy&&(err?.code===2||err?.code===3)){
+          navigator.geolocation.clearWatch(state.watchId);options.enableHighAccuracy=false;options.maximumAge=30000;options.timeout=15000;
+          $('gps-status').innerHTML='<b>GPS：</b>正在尝试兼容定位';
+          state.watchId=navigator.geolocation.watchPosition(onGps,gpsError,options);
+          return
+        }
+        gpsError(err)
+      };
+      state.watchId=navigator.geolocation.watchPosition(onGps,fail,options)
+    }
+    function locateNow(){
+      if(!navigator.geolocation){gpsError();return}
+      if(!window.isSecureContext){gpsError({code:0});$('map-coordinates').textContent='定位需要 HTTPS 或 localhost；直接打开本地文件时，请改用安全网址。';return}
+      const button=$('locate-now');button.disabled=true;button.textContent='定位中…';state.autoCenter=true;state.gpsErrorText='';$('gps-status').innerHTML='<b>GPS：</b>正在请求系统定位';
+      const done=pos=>{button.disabled=false;button.textContent='重新定位';onGps(pos,{persist:state.running})},fail=err=>{
+        if(err?.code===2||err?.code===3){$('gps-status').innerHTML='<b>GPS：</b>正在尝试兼容定位';try{navigator.geolocation.getCurrentPosition(done,second=>{button.disabled=false;button.textContent='重试定位';gpsError(second)},{enableHighAccuracy:false,maximumAge:30000,timeout:12000})}catch(second){button.disabled=false;button.textContent='重试定位';gpsError(second)}return}
+        button.disabled=false;button.textContent='重试定位';gpsError(err)
+      };
+      try{navigator.geolocation.getCurrentPosition(done,fail,{enableHighAccuracy:true,maximumAge:0,timeout:15000})}catch(err){button.disabled=false;button.textContent='重试定位';gpsError(err)}
+    }
+    function onGps(pos,{persist=state.running}={}){
+      const c=pos?.coords||{},t=Number(pos?.timestamp||Date.now()),raw={lat:Number(c.latitude),lng:Number(c.longitude),accuracy:Number(c.accuracy),timestamp:t,doppler:c.speed!==null&&c.speed!==undefined&&Number(c.speed)>=0?Number(c.speed):null,heading:c.heading!==null&&c.heading!==undefined&&Number.isFinite(Number(c.heading))?Number(c.heading):null},prev=state.lastGoodGps,elapsed=prev?(t-prev.timestamp)/1000:0,decision=gpsDisposition(prev,raw,elapsed);
+      if(!Number.isFinite(raw.lat)||!Number.isFinite(raw.lng)||Math.abs(raw.lat)>90||Math.abs(raw.lng)>180){gpsError();return}
+      if(prev&&elapsed<=0){$('gps-status').innerHTML='<b>GPS：</b>收到重复或更早的定位，已忽略';return}
+      state.gpsErrorText='';
+      state.rawGps={...raw,accepted:decision.accept};
+      let corrected=null;
+      if(decision.accept){
+        if(!prev||elapsed>30)state.gpsWindow=[];
+        state.gpsWindow.push(raw);if(state.gpsWindow.length>5)state.gpsWindow.shift();
+        const fast=decision.speed!==null&&decision.speed>=7,near=state.gpsWindow.filter(p=>haversine(p,raw)<Math.max(30,raw.accuracy*2));
+        const medLat=median(near.map(p=>p.lat))??raw.lat,medLng=median(near.map(p=>p.lng))??raw.lng;
+        const alpha=fast?.9:Math.min(.8,Math.max(.4,24/Math.max(24,raw.accuracy)));
+        const base=fast?raw:{lat:medLat,lng:medLng};
+        corrected=state.gps&&prev&&elapsed<=30?{lat:state.gps.lat*(1-alpha)+base.lat*alpha,lng:state.gps.lng*(1-alpha)+base.lng*alpha}:{lat:raw.lat,lng:raw.lng};
+        state.lastGoodGps={...raw};state.gps={...corrected,accuracy:raw.accuracy,raw:{lat:raw.lat,lng:raw.lng,accuracy:raw.accuracy},timestamp:t,speedMps:decision.speed};
+        recordSpeed(t,raw,decision);
+        state.gpsFixCount++;if(!state.mapCenter||state.autoCenter){state.mapCenter={lat:corrected.lat,lng:corrected.lng};state.autoCenter=true}
+      }else if(!state.mapCenter||state.autoCenter){
+        state.mapCenter={lat:raw.lat,lng:raw.lng};state.autoCenter=true
+      }
+      if(persist){
+        const row={timestamp:new Date(t).toISOString(),rawLat:raw.lat,rawLng:raw.lng,accuracy:raw.accuracy,correctedLat:corrected?.lat??'',correctedLng:corrected?.lng??'',coordinateNote:'原始/平滑/本地示意图均为 WGS-84',accepted:decision.accept?'是':'否',status:decision.status,speed:decision.speed??''};
+        state.gpsTrack.push(row);if(state.gpsTrack.length>3000)state.gpsTrack.shift();queueGps(row);
+        if(state.gpsFixCount>0&&state.gpsFixCount%10===0)try{localStorage.setItem('roadaura_gps_track_v1',JSON.stringify(state.gpsTrack.slice(-1000)))}catch(_){}
+      }
+      $('gps-status').innerHTML=decision.accept?'<b>GPS：</b>±'+Math.round(raw.accuracy)+'m · 有效 '+state.gpsFixCount+' 点':'<b>GPS：</b>原始点 ±'+(Number.isFinite(raw.accuracy)?Math.round(raw.accuracy):'未知')+'m · '+esc(decision.status);
+      renderMap()
+    }
+        async function startField(){
+      if(state.running)return;if(!$('field-privacy-consent').checked){toast('实地采集前请先确认定位数据的本机保存与导出说明');$('capture-state').textContent='等待隐私确认';return}if(!('DeviceMotionEvent'in window)){toast('此浏览器不支持运动传感器接口');$('capture-state').textContent='设备不支持';return}
+      try{if(typeof DeviceMotionEvent.requestPermission==='function'){const p=await DeviceMotionEvent.requestPermission();if(p!=='granted')throw new Error('运动传感器权限未批准')}
+        state.running=true;state.calibrating=true;state.calibration=[];state.calibrationStart=Date.now();state.gravity=null;state.noiseMad=0;state.lastVertical=null;state.history=[];state.active=null;state.rejectUntil=0;state.gpsWindow=[];state.gpsFixCount=0;state.motionBuf=[];state.speedHist=[];state.lastDoppler=null;state.pendingCrossing=null;clearTimeout(state.crossingTimer);state.autoCenter=true;state.mapGridKey=null;
+        $('start-field').disabled=true;$('stop-field').disabled=false;$('capture-state').textContent='等待基线';toast('请让车辆和手机保持静止约 2 秒建立重力方向基线');window.addEventListener('devicemotion',onMotion,{passive:true});
+        startGpsWatch();
+        if(!window.isSecureContext)toast('当前页面非安全上下文；请从 HTTPS/localhost 打开以启用传感器和定位')
+      }catch(err){state.running=false;window.removeEventListener('devicemotion',onMotion);if(state.watchId!==null&&navigator.geolocation)navigator.geolocation.clearWatch(state.watchId);state.watchId=null;$('start-field').disabled=false;$('stop-field').disabled=true;$('capture-state').textContent='权限未开启';toast(err.message||'未能开启传感器，请检查权限')}
+    }
+    function stopField(){if(!state.running)return;state.running=false;window.removeEventListener('devicemotion',onMotion);if(state.watchId!==null&&'geolocation'in navigator)navigator.geolocation.clearWatch(state.watchId);state.watchId=null;finishEvent();finalizeCrossing(true);$('start-field').disabled=false;$('stop-field').disabled=true;$('capture-state').textContent='采集已停止';flushSamples();flushGps();toast('真实采集已停止；测量数据已保存在本机')}
+    function setMode(mode){if(state.running)stopField();state.mode=mode;state.wave=Array.from({length:120},()=>({value:0,artifact:false}));state.noiseMad=0;state.history=[];state.active=null;const app=$('app');app.classList.toggle('mode-field',mode==='field');$('tab-demo').classList.toggle('active',mode==='demo');$('tab-field').classList.toggle('active',mode==='field');$('mode-notice').innerHTML=mode==='demo'?'<span class="icon">●</span><div><b>模拟演示模式</b>：本次演示新增的信号与事件为合成样例；历史实采记录仍以“实采”标注，不代表道路识别准确率。</div>':'<span class="icon">●</span><div><b>真实传感器模式</b>：请求设备运动与 GPS 权限；原始数据、质量标记、平滑坐标保存在本机。候选标签必须人工复核。</div>';$('mode-notice').style.background=mode==='demo'?'#fff4df':'#e8f4f1';$('mode-notice').style.borderColor=mode==='demo'?'#f0d9ac':'#cce4dc';$('mode-notice').style.color=mode==='demo'?'#76541d':'#31675e';$('source-chip').textContent=mode==='demo'?'模拟数据':'真实传感器';$('source-chip').classList.toggle('sim',mode==='demo');$('map-chip').textContent=state.mapReady?'开放地图':'本地定位图';$('map-chip').classList.toggle('sim',!state.mapReady);$('map-caption').textContent=mode==='demo'?'地图点按事件编号展示；模拟信号不生成真实事件坐标。':'有效实测事件按编号标注；原始 GPS 与平滑点分别保留。';$('signal-label').textContent=mode==='demo'?'竖直加速度（合成 m/s²）':'竖直加速度（m/s²）';$('signal-subtitle').textContent=mode==='demo'?'合成信号用正负脉冲顺序演示响应形状；仅供算法逻辑自检。':'重力方向投影后的竖直动态加速度；正负方向可见，但不代表路面几何深度。';$('field-note').hidden=mode!=='field';$('capture-state').textContent=mode==='demo'?'待开始':'待授权';if(mode==='demo'){const points=eventMapPoints();if(visibleGps())points.push(visibleGps());if(!fitMapToPoints(points)){state.mapCenter={lat:40.0,lng:116.326};state.mapZoom=17;state.autoCenter=false;state.mapGridKey=null}}else if(visibleGps()){state.mapCenter={lat:visibleGps().lat,lng:visibleGps().lng};state.mapZoom=17;state.autoCenter=true;state.mapGridKey=null}else if(!fitMapToPoints(eventMapPoints())){state.mapCenter=null;state.autoCenter=true;state.mapGridKey=null}renderMap();draw()}
+    function demoPulse(type){const profile=currentProfile(),twoWheel=!profile.twoTrack,d=demoCrossingRows(type,twoWheel?{lag:480,speed:2.5}:{}),wave=d.rows.map(r=>({value:r.v,artifact:false}));state.wave=Array.from({length:Math.max(0,120-wave.length)},()=>({value:(Math.random()-.5)*.25,artifact:false})).concat(wave).slice(-120);draw();
+      const result=classifyResponse(d.front,BASE_THRESHOLD,d.frontTimes,d.baselineValues),pair=axlePairFeature(d.rows,{speedMps:d.approach.speedAtEventMps,profile}),fwd=forwardAxis(d.up,null),rp=rollPitchFeature(d.rows,d.up,fwd),sub=classifySubtype(result.kind,pair,rp,d.approach,profile),now=Date.now(),t0=now-d.rows[d.rows.length-1].time;
+      d.rows.forEach(r=>storeSample({source:'demo',time:t0+r.time,vertical:r.v,rx:r.rot.x,ry:r.rot.y,rz:r.rot.z,threshold:BASE_THRESHOLD,quality:'模拟合成样本（非路测）'}));
+      const peak=Math.max(...d.rows.map(r=>Math.abs(r.v))),signed=d.rows.reduce((b,r)=>Math.abs(r.v)>Math.abs(b)?r.v:b,0),label=sub.subtypeLabel||result.label;
+      addRecord({label,peak,signedPeak:signed,pattern:result.pattern,kind:result.kind,subtype:sub.subtype,subtypeReasons:sub.subtypeReasons,source:'demo',startTime:new Date(t0).toISOString(),endTime:new Date(now).toISOString(),sampleCount:d.rows.length,quality:'合成波形规则演示；不是实测结果',features:{...result.features,gpsSpeedMps:d.approach.speedAtEventMps,...d.approach,...pair,...rp,forwardSource:fwd.source,speedBumpScore:sub.speedBumpScore,vehicleProfile:`${profile.name}（模拟）`,segmentCount:1+(pair.pairFound?1:0)},evidence:result.evidence+` · 车速 ${d.approach.speedAtEventMps} m/s（模拟）`});toast(`已添加模拟：${label}`)}
+    function playDemo(){if(state.mode!=='demo')return;clearTimeout(state.demoTimer);state.records=state.records.filter(r=>r.source!=='demo');state.demoSamples=[];renderRecords();$('capture-state').textContent='模拟播放中';$('last-value').textContent='—';$('signal-subtitle').textContent=currentProfile().twoTrack?'依次展示：减速带（前后轮双冲击、俯仰为主）→ 单侧局部凸起（侧倾明显）→ 凹陷；均为合成信号。':'依次展示：减速带（前后轮双冲击、车把无转向扰动）→ 窄小/斜向凸起（车把转向扰动明显）→ 凹陷；均为合成信号。';$('play-demo').disabled=true;const seq=['speed_bump','local_bump','depression'];let i=0;const next=()=>{demoPulse(seq[i++]);if(i<seq.length)state.demoTimer=setTimeout(next,1300);else{$('capture-state').textContent=`模拟完成 · ${seq.length} 条候选`;$('play-demo').disabled=false}};next()}
+    function addOneDemo(){if(state.mode!=='demo')return;demoPulse(['speed_bump','local_bump','depression'][Math.floor(Math.random()*3)])}
+    const SUBTYPE_NAMES={speed_bump:'减速带型',speed_bump_possible:'疑似减速带',local_bump:'局部凸起型',bump_unresolved:'凸起未细分',rough:'连续颠簸',depression:'凹陷型',unknown:'形状不明',none:''};
+    function subtypeName(r){return SUBTYPE_NAMES[r?.subtype]??''}
+    function eventNumber(record){const m=String(record?.id||'').match(/(\d+)$/);return m?String(Number(m[1])):'?'}
+    function mapCoordinate(point){return {lat:Number(point?.lat),lng:Number(point?.lng)}}
+    function eventMapPoints(){return state.records.filter(r=>r.source==='field'&&(r.gps||r.gpsRaw)&&Number.isFinite(Number((r.gps||r.gpsRaw).lat))&&Number.isFinite(Number((r.gps||r.gpsRaw).lng))&&Math.abs(Number((r.gps||r.gpsRaw).lat))<=90&&Math.abs(Number((r.gps||r.gpsRaw).lng))<=180).map(r=>r.gps||r.gpsRaw)}
+    function fitMapToPoints(points){const rows=(points||[]).filter(p=>Number.isFinite(Number(p?.lat))&&Number.isFinite(Number(p?.lng))&&Math.abs(Number(p.lat))<=90&&Math.abs(Number(p.lng))<=180);if(!rows.length)return false;const xy=rows.map(p=>mercatorPixel(p,0)),minX=Math.min(...xy.map(p=>p.x)),maxX=Math.max(...xy.map(p=>p.x)),minY=Math.min(...xy.map(p=>p.y)),maxY=Math.max(...xy.map(p=>p.y)),dx=Math.max(maxX-minX,.00015),dy=Math.max(maxY-minY,.00015),w=Math.max(180,Number(map.clientWidth||360)-72),h=Math.max(160,Number(map.clientHeight||290)-72),zoom=Math.max(3,Math.min(19,Math.floor(Math.log2(Math.min(w/dx,h/dy))))),cx=(minX+maxX)/2,cy=(minY+maxY)/2;state.mapZoom=zoom;state.mapCenter={lng:cx/256*360-180,lat:Math.atan(Math.sinh(Math.PI*(1-2*cy/256)))*180/Math.PI};state.autoCenter=true;state.mapGridKey=null;return true}
+    function amapMarkerUrl(point,name='RoadAura 定位点'){const p=mapCoordinate(point);return `https://uri.amap.com/marker?position=${p.lng.toFixed(6)},${p.lat.toFixed(6)}&coordinate=wgs84&name=${encodeURIComponent(name)}&callnative=1`}
+    function visibleGps(){const raw=state.rawGps,good=state.gps;return raw&&(!good||!raw.accepted&&raw.timestamp>=good.timestamp)?raw:good}
+    function openAmap(){const point=visibleGps();if(!point){toast('请先定位');return}const link=document.createElement('a');link.href=amapMarkerUrl(point,point.accepted===false?'RoadAura 原始定位（精度待复核）':'RoadAura 当前定位');link.target='_blank';link.rel='noopener noreferrer';link.referrerPolicy='no-referrer';document.body.appendChild(link);link.click();link.remove()}
+    function privacyMapCenter(point){return {lat:Math.round(Number(point.lat)*1000)/1000,lng:Math.round(Number(point.lng)*1000)/1000}}
+    function privacyGridKey(point){return `${(Math.round(Number(point.lat)*1000)/1000).toFixed(3)},${(Math.round(Number(point.lng)*1000)/1000).toFixed(3)}`}
+    function loadMapLibre(){if(window.maplibregl?.Map)return Promise.resolve(window.maplibregl);if(mapLibreLoaderPromise)return mapLibreLoaderPromise;const css=document.createElement('link');css.rel='stylesheet';css.href='https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css';document.head.appendChild(css);const pending=new Promise((resolve,reject)=>{const script=document.createElement('script');script.src='https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.js';script.async=true;script.onload=()=>window.maplibregl?.Map?resolve(window.maplibregl):reject(new Error('MapLibre 脚本加载后未就绪'));script.onerror=()=>reject(new Error('无法连接地图脚本 CDN，请检查网络'));document.head.appendChild(script)});mapLibreLoaderPromise=pending;pending.catch(()=>{if(mapLibreLoaderPromise===pending)mapLibreLoaderPromise=null});return pending}
+    async function enableOpenMap(){
+      if(!$('map-consent').checked){$('map-mode-status').textContent='请先确认地图服务范围';toast('连接开放底图前，请先确认地图服务隐私说明');return}
+      const button=$('load-openmap'),message=$('map-message');button.disabled=true;button.textContent='正在连接…';state.mapError=null;$('map-mode-status').textContent='正在加载开放地图';message.textContent='正在连接 OpenFreeMap…';message.style.display='block';
+      try{const maplibregl=await loadMapLibre();state.map?.remove?.();const origin=state.mapCenter||{lat:40,lng:116.326},start=privacyMapCenter(origin);state.mapZoom=17;state.mapGridKey=null;state.mapReady=false;state.map=new maplibregl.Map({container:'live-map',style:'https://tiles.openfreemap.org/styles/liberty',center:[start.lng,start.lat],zoom:state.mapZoom,minZoom:3,maxZoom:19,attributionControl:false,dragRotate:false,touchPitch:false});state.map.on('load',()=>{state.mapReady=true;$('map-chip').textContent='开放地图';$('map-chip').classList.remove('sim');$('map-attribution').hidden=false;renderMap();toast('免 Key 开放地图已连接')});state.map.on('dragstart',()=>{state.autoCenter=false});state.map.on('move',()=>{if(!state.mapFramePending){state.mapFramePending=true;requestAnimationFrame(()=>{state.mapFramePending=false;renderMap()})}});state.map.on('moveend',()=>{state.mapZoom=state.map.getZoom?.()||state.mapZoom;renderMap()});state.map.on('error',()=>{state.mapError='底图请求失败；定位点仍在本地显示';renderMap()})}
+      catch(err){state.mapReady=false;state.map=null;state.mapError='开放底图连接失败；定位点仍在本地显示';renderMap();toast('开放底图未能加载；定位与本地采集仍可使用')}
+      finally{button.disabled=false;button.textContent='重新连接开放地图'}
+    }
+    function appendSvg(tag,attrs){const el=document.createElementNS('http://www.w3.org/2000/svg',tag);for(const [key,value] of Object.entries(attrs))el.setAttribute(key,String(value));return el}
+    function mercatorPixel(point,zoom){const c=mapCoordinate(point),lat=Math.max(-85.0511,Math.min(85.0511,c.lat)),scale=256*2**zoom,rad=lat*Math.PI/180;return {x:(c.lng+180)/360*scale,y:(1-Math.log(Math.tan(rad)+1/Math.cos(rad))/Math.PI)/2*scale}}
+    function mapPixel(point){if(!point)return null;const c=mapCoordinate(point);if(!Number.isFinite(c.lat)||!Number.isFinite(c.lng)||Math.abs(c.lat)>90||Math.abs(c.lng)>180)return null;if(state.mapReady&&state.map){const px=state.map.project([c.lng,c.lat]);return px&&Number.isFinite(Number(px.x))&&Number.isFinite(Number(px.y))?{x:Number(px.x),y:Number(px.y)}:null}const origin=state.mapCenter||visibleGps()||{lat:40,lng:116.326},a=mercatorPixel(c,state.mapZoom),b=mercatorPixel(origin,state.mapZoom);return {x:Number(map.clientWidth||520)/2+a.x-b.x,y:Number(map.clientHeight||290)/2+a.y-b.y}}
+    function focusEventOnMap(id){const r=state.records.find(item=>item.id===id),point=r&&(r.gps||r.gpsRaw);if(!point){toast('该事件没有可用坐标');return}state.focusedEventId=id;state.mapCenter={lat:Number(point.lat),lng:Number(point.lng)};state.mapZoom=Math.max(17,Math.min(19,state.mapZoom||17));state.autoCenter=true;state.mapGridKey=null;if(state.mapReady&&state.map)state.map.jumpTo({center:[state.mapCenter.lng,state.mapCenter.lat],zoom:state.mapZoom});$('map-mode-status').textContent=`已定位到 ${eventNumber(r)} 号事件`;renderMap()}
+    function separateMapMarkers(markers,width,height,currentPoint=null){
+      const placed=[],minGap=28,clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
+      return markers.map(marker=>{const origin=marker.point;let x=origin.x,y=origin.y;const overlaps=(candidate)=>{if(currentPoint&&Math.hypot(candidate.x-currentPoint.x,candidate.y-currentPoint.y)<22)return true;return placed.some(p=>Math.hypot(candidate.x-p.x,candidate.y-p.y)<minGap)};
+        if(overlaps({x,y})){let found=false;for(let ring=0;ring<7&&!found;ring++){const radius=26+ring*15;for(let step=0;step<16;step++){const angle=step*Math.PI/8-Math.PI/2,candidate={x:clamp(origin.x+Math.cos(angle)*radius,14,width-14),y:clamp(origin.y+Math.sin(angle)*radius,14,height-14)};if(!overlaps(candidate)){x=candidate.x;y=candidate.y;found=true;break}}}}
+        const result={...marker,x,y,displaced:Math.hypot(x-origin.x,y-origin.y)>2};placed.push({x,y});return result});
+    }
+    function renderMap(){
+      if(!map)return;const svg=$('map-overlay'),message=$('map-message'),located=visibleGps(),online=state.mapReady&&state.map;
+      if(online&&state.mapCenter&&state.autoCenter){const key=`${state.mapCenter.lat.toFixed(6)},${state.mapCenter.lng.toFixed(6)}`;if(key!==state.mapGridKey){state.mapGridKey=key;state.map.setCenter([state.mapCenter.lng,state.mapCenter.lat])}}
+      if(online&&Math.abs((state.map.getZoom?.()??state.mapZoom)-state.mapZoom)>.1)state.map.setZoom(state.mapZoom);
+      const w=Number(map.clientWidth||520),h=Number(map.clientHeight||290);svg.setAttribute('viewBox',`0 0 ${w} ${h}`);svg.innerHTML='';
+      const track=state.gpsTrack.filter(p=>p.accepted==='是'&&Number.isFinite(Number(p.correctedLat))&&Number.isFinite(Number(p.correctedLng))).slice(-1200),pts=track.map(p=>mapPixel({lat:Number(p.correctedLat),lng:Number(p.correctedLng)})).filter(p=>p&&p.x>-25&&p.x<w+25&&p.y>-25&&p.y<h+25);if(pts.length>1)svg.appendChild(appendSvg('polyline',{points:pts.map(p=>`${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' '),class:'map-track'}));
+      const currentPixel=located?mapPixel(located):null,historical=located&&Date.now()-located.timestamp>300000;
+      if(located&&currentPixel&&currentPixel.x>=-20&&currentPixel.x<=w+20&&currentPixel.y>=-20&&currentPixel.y<=h+20){const p=currentPixel,accuracy=Number(located.accuracy);if(Number.isFinite(accuracy)&&accuracy>0){const edge=mapPixel({lat:Math.min(85,located.lat+accuracy/111320),lng:located.lng}),radius=Math.min(Math.min(w,h)*.47,Math.max(12,Math.abs((edge?.y??p.y)-p.y)));svg.appendChild(appendSvg('circle',{cx:p.x,cy:p.y,r:radius,class:'map-accuracy'}))}svg.appendChild(appendSvg('circle',{cx:p.x,cy:p.y,r:located.accepted===false?8:9,class:located.accepted===false?'map-raw-dot':'map-fixed-dot'}));const label=appendSvg('text',{x:Math.min(w-85,p.x+13),y:Math.max(22,p.y-11),class:'map-dot-label'});label.textContent=historical?'历史位置':located.accepted===false?'原始定位':'当前位置';svg.appendChild(label)}
+      const eventRows=state.records.filter(r=>r.source==='field'&&(r.gps||r.gpsRaw)&&Number.isFinite(Number((r.gps||r.gpsRaw).lat))&&Number.isFinite(Number((r.gps||r.gpsRaw).lng))),mapped=eventRows.map(r=>({record:r,point:mapPixel(r.gps||r.gpsRaw)})).filter(item=>item.point&&item.point.x>=-18&&item.point.x<=w+18&&item.point.y>=-18&&item.point.y<=h+18),placed=separateMapMarkers(mapped,w,h,currentPixel);let visibleEventCount=mapped.length;
+      for(const item of placed){const r=item.record,p=item.point;if(item.displaced)svg.appendChild(appendSvg('line',{x1:p.x,y1:p.y,x2:item.x,y2:item.y,class:'map-pin-leader'}));svg.appendChild(appendSvg('circle',{cx:item.x,cy:item.y,r:r.id===state.focusedEventId?15:13,class:r.id===state.focusedEventId?'map-pin map-pin-focused':r.gps?'map-pin':'map-pin-raw'}));const label=appendSvg('text',{x:item.x,y:item.y,class:'map-pin-number'});label.textContent=eventNumber(r);svg.appendChild(label)}
+      $('open-amap').disabled=!located;$('map-coordinates').textContent=located?`${historical?'历史位置（非实时）':located.accepted===false?'原始点（精度待复核）':'有效定位'}：${located.lat.toFixed(6)}, ${located.lng.toFixed(6)} · ${Number.isFinite(located.accuracy)?`±${Math.round(located.accuracy)} m`:'精度未知'} · WGS‑84${state.running?' · 正在保存轨迹':historical?' · 来自本机历史记录':' · 单独定位不保存轨迹'}`:'尚无定位点。可先单独定位，再决定是否开启传感器采集。';
+      const fieldRows=state.records.filter(r=>r.source==='field'),missing=fieldRows.filter(r=>!r.gps&&!r.gpsRaw).length;$('map-point-status').textContent=fieldRows.length?`计数点：${visibleEventCount}/${eventRows.length} 个有坐标事件当前可见 · ${missing} 条实采事件无定位坐标`:'计数点：0；模拟事件不生成真实定位点';
+      if(!located){const hint=state.gpsErrorText||(!window.isSecureContext?'请用 HTTPS 页面打开，文件模式无法定位':!navigator.geolocation?'当前浏览器不提供定位接口':'点击“定位并显示我的位置”并允许浏览器定位');$('gps-status').innerHTML='<b>GPS：</b>'+esc(hint)}
+      message.style.display=online&&!state.mapError?'none':'block';message.textContent=state.mapError||(!located?'定位点会显示在这里；在线底图可选':'本地位置示意图 · 点位已标注；可选连接在线底图');
+      $('map-mode-status').textContent=online?(state.mapError?'底图部分不可用 · 点位可见':'开放底图已连接 · 点位可见'):(located?'本地定位示意 · 点位可见':!window.isSecureContext?'需 HTTPS 定位权限':'本地定位示意 · 等待 GPS');
+    }
+    function setupMap(){
+      $('load-openmap').addEventListener('click',enableOpenMap);$('locate-now').addEventListener('click',locateNow);$('open-amap').addEventListener('click',openAmap);$('zoom-in').addEventListener('click',()=>{state.mapZoom=Math.min(19,(state.map?.getZoom?.()||state.mapZoom)+1);state.map?.setZoom(state.mapZoom);renderMap()});$('zoom-out').addEventListener('click',()=>{state.mapZoom=Math.max(3,(state.map?.getZoom?.()||state.mapZoom)-1);state.map?.setZoom(state.mapZoom);renderMap()});$('map-follow').addEventListener('click',()=>{const point=visibleGps();if(!point){toast('还没有 GPS 定位');return}state.mapCenter={lat:point.lat,lng:point.lng};state.autoCenter=true;state.mapGridKey=null;renderMap()});$('events').addEventListener('change',event=>{const target=event.target,id=target?.dataset?.reviewId;if(id)reviewRecord(id,target.value)});$('events').addEventListener('click',event=>{const button=event.target.closest('[data-focus-event]');if(button)focusEventOnMap(button.dataset.focusEvent)});
+    }
+    function getCell(row,col){let n=col,s='';while(n>0){const r=(n-1)%26;s=String.fromCharCode(65+r)+s;n=Math.floor((n-1)/26)}return s+row}
+    function sheetXml(rows){let xml='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>';rows.forEach((row,ri)=>{xml+=`<row r="${ri+1}">`;row.forEach((value,ci)=>{if(value===null||value===undefined||value==='')return;const ref=getCell(ri+1,ci+1);if(typeof value==='number'&&Number.isFinite(value)){xml+=`<c r="${ref}"><v>${value}</v></c>`}else{const text=String(value).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;');xml+=`<c r="${ref}" t="inlineStr"><is><t xml:space="preserve">${text}</t></is></c>`}});xml+='</row>'});return xml+'</sheetData></worksheet>'}
+    const crcTable=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xedb88320^(c>>>1):c>>>1;t[n]=c>>>0}return t})();
+    function crc32(bytes){let c=0xffffffff;for(const b of bytes)c=crcTable[(c^b)&255]^(c>>>8);return (c^0xffffffff)>>>0}
+    function joinBytes(parts){const size=parts.reduce((n,p)=>n+p.length,0),out=new Uint8Array(size);let at=0;for(const p of parts){out.set(p,at);at+=p.length}return out}
+    function zipStore(files){const enc=new TextEncoder(),locals=[],centrals=[];let offset=0;const dosTime=0,dosDate=((new Date().getFullYear()-1980)<<9)|((new Date().getMonth()+1)<<5)|new Date().getDate();for(const [name,content] of files){const nb=enc.encode(name),data=enc.encode(content),crc=crc32(data),lh=new Uint8Array(30+nb.length),lv=new DataView(lh.buffer);lv.setUint32(0,0x04034b50,true);lv.setUint16(4,20,true);lv.setUint16(6,0,true);lv.setUint16(8,0,true);lv.setUint16(10,dosTime,true);lv.setUint16(12,dosDate,true);lv.setUint32(14,crc,true);lv.setUint32(18,data.length,true);lv.setUint32(22,data.length,true);lv.setUint16(26,nb.length,true);lv.setUint16(28,0,true);lh.set(nb,30);locals.push(lh,data);const ch=new Uint8Array(46+nb.length),cv=new DataView(ch.buffer);cv.setUint32(0,0x02014b50,true);cv.setUint16(4,20,true);cv.setUint16(6,20,true);cv.setUint16(8,0,true);cv.setUint16(10,0,true);cv.setUint16(12,dosTime,true);cv.setUint16(14,dosDate,true);cv.setUint32(16,crc,true);cv.setUint32(20,data.length,true);cv.setUint32(24,data.length,true);cv.setUint16(28,nb.length,true);cv.setUint16(30,0,true);cv.setUint16(32,0,true);cv.setUint16(34,0,true);cv.setUint16(36,0,true);cv.setUint32(38,0,true);cv.setUint32(42,offset,true);ch.set(nb,46);centrals.push(ch);offset+=lh.length+data.length}const central=joinBytes(centrals),end=new Uint8Array(22),ev=new DataView(end.buffer);ev.setUint32(0,0x06054b50,true);ev.setUint16(4,0,true);ev.setUint16(6,0,true);ev.setUint16(8,files.length,true);ev.setUint16(10,files.length,true);ev.setUint32(12,central.length,true);ev.setUint32(16,offset,true);ev.setUint16(20,0,true);return new Blob([joinBytes([...locals,central,end])],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'})}
+    async function exportXlsx(){
+      if(!state.records.length&&!state.recentSamples.length&&!state.gpsTrack.length){toast('当前没有可导出的测量数据');return}toast('正在整理全量测量数据…');await flushSamples();await flushGps();await state.writeQueue;
+      const fromDbSamples=await dbRead('samples'),fromDbGps=await dbRead('gps');const samples=(fromDbSamples||[]).concat(state.fieldFallbackSamples,state.demoSamples).sort((a,b)=>String(a.timestamp).localeCompare(String(b.timestamp)));const gps=(fromDbGps||[]).concat(state.gpsFallback);
+      const eventRows=[['事件编号','地图编号','来源','记录时间ISO','算法候选标签','人工复核标签','复核时间ISO','响应形状','峰值绝对值_m/s²','最大有符号峰_m/s²','正峰_m/s²','负峰幅值_m/s²','双峰比例','峰间隔_ms','RMS_m/s²','能量_m²/s⁴','基线偏置_m/s²','基线噪声MAD_m/s²','噪声标准差估计_m/s²','动态阈值_m/s²','正峰持续样本数','负峰持续样本数','估计采样间隔_ms','小波D1细节能量','小波D2细节能量','小波D3细节能量','细分类型','减速带证据分','细分依据','车辆类型','越阈段数','双冲击间隔_ms','次冲击相对强度','推算轴距_m','窗口冲击次数','侧倾占比','侧倾RMS_deg/s','俯仰RMS_deg/s','转向扰动占比','转向RMS_deg/s','车头方向来源','事件时车速_m/s','前8秒最高车速_m/s','过前减速_m/s','车速来源','样本数','开始时间ISO','结束时间ISO','平滑纬度_WGS84','平滑经度_WGS84','GPS精度_m','GPS估计速度_m/s','原始纬度_WGS84','原始经度_WGS84','数据质量/边界']];
+      [...state.records].reverse().forEach(r=>{const f=r.features||{};eventRows.push([r.id,eventNumber(r),r.source==='demo'?'模拟':'实采',r.timestamp,r.label,r.reviewLabel||'待复核',r.reviewedAt||'',r.pattern,Number(r.peak),Number(r.signedPeak),f.positivePeak??'',f.negativePeak??'',f.peakRatio??'',f.lagMs??'',f.rms??'',f.energy??'',f.baseline??'',f.noiseMad??'',f.noiseSigma??'',f.decisionThreshold??'',f.positiveSupport??'',f.negativeSupport??'',f.sampleIntervalMs??'',f.waveletD1Energy??'',f.waveletD2Energy??'',f.waveletD3Energy??'',subtypeName(r),f.speedBumpScore??'',(r.subtypeReasons||[]).join('；'),f.vehicleProfile??'',f.segmentCount??'',f.pairLagMs??'',f.pairRatio??'',f.impliedWheelbaseM??'',f.impactCount??'',f.rollRatio??'',f.rollRms??'',f.pitchRms??'',f.yawRatio??'',f.yawRms??'',f.forwardSource??'',f.speedAtEventMps??'',f.priorMaxSpeedMps??'',f.preBrakeDropMps??'',f.speedSource??'',r.sampleCount,r.startTime,r.endTime,r.gps?.lat??'',r.gps?.lng??'',r.gps?.accuracy??'',f.gpsSpeedMps??'',r.gpsRaw?.lat??'',r.gpsRaw?.lng??'',r.quality])});
+      const sampleRows=[['序号','来源','时间ISO','线性加速度X','线性加速度Y','线性加速度Z','含重力X','含重力Y','含重力Z','陀螺仪X_deg/s','陀螺仪Y_deg/s','陀螺仪Z_deg/s','竖直分量_up正_m/s²','加速度模长_m/s²','动态阈值_m/s²','样本质量/剔除原因','原始纬度_WGS84','原始经度_WGS84','定位精度_m','平滑纬度_WGS84','平滑经度_WGS84','GPS更新时间ISO','GPS数据滞后_ms','坐标说明']];samples.forEach((r,i)=>sampleRows.push([i+1,r.source==='demo'?'模拟':'实采',r.timestamp,r.ax,r.ay,r.az,r.gax,r.gay,r.gaz,r.rx??'',r.ry??'',r.rz??'',r.vertical,r.magnitude,r.threshold,r.quality,r.latRaw,r.lngRaw,r.accuracy,r.latCorrected,r.lngCorrected,r.gpsTimestamp,r.gpsAgeMs,r.coordinateNote||'WGS-84；GPS为平滑估计']));
+      const gpsRows=[['序号','时间ISO','原始纬度_WGS84','原始经度_WGS84','GPS精度_m','平滑纬度_WGS84','平滑经度_WGS84','是否纳入平滑轨迹','质量判定','推算速度_m/s','坐标说明']];gps.forEach((r,i)=>gpsRows.push([i+1,r.timestamp,r.rawLat,r.rawLng,r.accuracy,r.correctedLat,r.correctedLng,r.accepted,r.status,r.speed,r.coordinateNote||'WGS-84；无坐标系偏移']));
+      const names=['事件候选','传感器样本','GPS轨迹'];const files=[['[Content_Types].xml','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/worksheets/sheet2.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/worksheets/sheet3.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>'],['_rels/.rels','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'],['xl/workbook.xml',`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>${names.map((n,i)=>`<sheet name="${n}" sheetId="${i+1}" r:id="rId${i+1}"/>`).join('')}</sheets></workbook>`],['xl/_rels/workbook.xml.rels','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+names.map((_,i)=>`<Relationship Id="rId${i+1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${i+1}.xml"/>`).join('')+'</Relationships>'],['xl/worksheets/sheet1.xml',sheetXml(eventRows)],['xl/worksheets/sheet2.xml',sheetXml(sampleRows)],['xl/worksheets/sheet3.xml',sheetXml(gpsRows)]];
+      const blob=zipStore(files);downloadBlob(blob,`RoadAura_测量全量数据_${new Date().toISOString().slice(0,10)}.xlsx`);toast(`Excel已导出：${samples.length} 条传感器样本、${gps.length} 个GPS点`)
+    }
+    function downloadBlob(blob,name){const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500)}
+    function exportCsv(){if(!state.records.length){toast('没有事件记录；全量数据请导出 Excel');return}const rows=[['事件编号','地图编号','数据来源','时间ISO','算法候选','人工复核','复核时间ISO','响应形状','峰值绝对值_m/s²','正峰_m/s²','负峰幅值_m/s²','峰间隔_ms','RMS_m/s²','细分类型','减速带证据分','推算轴距_m','侧倾占比','过前减速_m/s','细分依据','平滑纬度_WGS84','平滑经度_WGS84','GPS精度_m','GPS估计速度_m/s']];for(const r of [...state.records].reverse()){const f=r.features||{};rows.push([r.id,eventNumber(r),r.source==='demo'?'模拟':'实采',r.timestamp,r.label,r.reviewLabel||'待复核',r.reviewedAt||'',r.pattern,r.peak,f.positivePeak??'',f.negativePeak??'',f.lagMs??'',f.rms??'',subtypeName(r),f.speedBumpScore??'',f.impliedWheelbaseM??'',f.rollRatio??'',f.preBrakeDropMps??'',(r.subtypeReasons||[]).join('；'),r.gps?.lat??'',r.gps?.lng??'',r.gps?.accuracy??'',f.gpsSpeedMps??''])}const csv='\uFEFF'+rows.map(row=>row.map(v=>'"'+String(v??'').replaceAll('"','""')+'"').join(',')).join('\r\n');downloadBlob(new Blob([csv],{type:'text/csv;charset=utf-8'}),`RoadAura_事件记录_${new Date().toISOString().slice(0,10)}.csv`)}
+    function exportJpg(){
+      if(!state.records.length&&!state.recentSamples.length&&!state.gpsTrack.length){toast('当前没有可导出的测量数据');return}const c=document.createElement('canvas');c.width=1800;c.height=Math.max(1200,Math.min(18000,860+Math.min(state.records.length,300)*42));const g=c.getContext('2d');g.fillStyle='#f4f7f5';g.fillRect(0,0,c.width,c.height);g.fillStyle='#19323b';g.fillRect(0,0,c.width,128);g.fillStyle='#fff';g.font='bold 46px sans-serif';g.fillText('RoadAura 测量摘要',56,68);g.font='23px sans-serif';g.fillStyle='#d4e8e1';g.fillText(`来源：${state.mode==='demo'?'模拟数据（非路测）':'实地采集'}  ·  生成：${new Date().toLocaleString('zh-CN')}`,58,108);
+      const chart={x:58,y:170,w:1050,h:440};g.fillStyle='#fff';g.fillRect(chart.x,chart.y,chart.w,chart.h);g.fillStyle='#233a3a';g.font='bold 27px sans-serif';g.fillText('竖直加速度波形（向上为正，向下为负）',chart.x+24,chart.y+42);const mid=chart.y+chart.h/2,range=Math.min(24,Math.max(8,Math.max(...state.wave.map(p=>Math.abs(p?.value||0)))*1.15));g.strokeStyle='#e6eeea';g.lineWidth=2;for(let i=0;i<5;i++){const y=chart.y+80+i*(chart.h-110)/4;g.beginPath();g.moveTo(chart.x+20,y);g.lineTo(chart.x+chart.w-18,y);g.stroke()}g.strokeStyle='#c9d6d1';g.beginPath();g.moveTo(chart.x+20,mid);g.lineTo(chart.x+chart.w-18,mid);g.stroke();g.strokeStyle='#d69a45';g.setLineDash([8,7]);[BASE_THRESHOLD,-BASE_THRESHOLD].forEach(v=>{const y=mid-v*(chart.h/2-70)/range;g.beginPath();g.moveTo(chart.x+20,y);g.lineTo(chart.x+chart.w-18,y);g.stroke()});g.setLineDash([]);g.strokeStyle='#13877c';g.lineWidth=4;g.beginPath();let open=false;state.wave.forEach((p,i)=>{if(!p||p.artifact||!Number.isFinite(p.value)){open=false;return}const x=chart.x+24+i*(chart.w-48)/(state.wave.length-1),v=Math.max(-range,Math.min(range,p.value)),y=mid-v*(chart.h/2-70)/range;if(!open){g.moveTo(x,y);open=true}else g.lineTo(x,y)});g.stroke();g.fillStyle='#62746f';g.font='19px sans-serif';g.fillText(`当前波形为界面最近 ${state.wave.length} 个样本；超范围原值与全量样本请导出 Excel。`,chart.x+24,chart.y+chart.h-20);
+      const box={x:1140,y:170,w:600,h:440};g.fillStyle='#fff';g.fillRect(box.x,box.y,box.w,box.h);g.fillStyle='#233a3a';g.font='bold 27px sans-serif';g.fillText('GPS纠偏轨迹（局部投影）',box.x+24,box.y+42);const pts=state.gpsTrack.filter(p=>p.accepted==='是'&&Number.isFinite(Number(p.correctedLat))&&Number.isFinite(Number(p.correctedLng))).slice(-1000);if(pts.length>1){const lats=pts.map(p=>Number(p.correctedLat)),lngs=pts.map(p=>Number(p.correctedLng)),minLat=Math.min(...lats),maxLat=Math.max(...lats),minLng=Math.min(...lngs),maxLng=Math.max(...lngs),pad=35,x0=box.x+pad,y0=box.y+90,pw=box.w-pad*2,ph=box.h-150;g.strokeStyle='#15877b';g.lineWidth=5;g.beginPath();pts.forEach((p,i)=>{const x=x0+(Number(p.correctedLng)-minLng)/(maxLng-minLng||1)*pw,y=y0+ph-(Number(p.correctedLat)-minLat)/(maxLat-minLat||1)*ph;if(i===0)g.moveTo(x,y);else g.lineTo(x,y)});g.stroke();g.fillStyle='#137cb3';g.beginPath();g.arc(x0+(Number(pts[pts.length-1].correctedLng)-minLng)/(maxLng-minLng||1)*pw,y0+ph-(Number(pts[pts.length-1].correctedLat)-minLat)/(maxLat-minLat||1)*ph,9,0,Math.PI*2);g.fill();g.fillStyle='#657772';g.font='18px sans-serif';g.fillText(`${pts.length} 个有效纠偏点 · 非道路中心线匹配`,box.x+25,box.y+box.h-20)}else{g.fillStyle='#83918d';g.font='23px sans-serif';g.fillText('暂无有效 GPS 轨迹',box.x+24,box.y+150)}
+      g.fillStyle='#fff';g.fillRect(58,645,1682,c.height-735);g.fillStyle='#233a3a';g.font='bold 28px sans-serif';g.fillText('候选事件（未经真实路测验证）',82,692);const rows=state.records.slice(0,300),startY=740;g.font='20px sans-serif';rows.forEach((r,i)=>{const y=startY+i*39;g.fillStyle=i%2?'#f7faf8':'#eef4f1';g.fillRect(78,y-25,1642,36);g.fillStyle='#1b2b34';g.fillText(`${r.id}  ${r.label}  |  峰值 ${r.peak} m/s²  |  ${r.pattern}  |  复核：${r.reviewLabel||'待复核'}  |  ${r.timeLabel}  |  ${r.locationLabel}`,94,y,1600)});if(!rows.length){g.fillStyle='#667981';g.fillText('暂无事件记录；波形与 GPS 原始数据请在 Excel 工作簿中查看。',85,755)}g.fillStyle='#8a9793';g.font='17px sans-serif';g.fillText('说明：JPG 为图表/轨迹摘要；全量高频传感器样本、原始 GPS、质量标记请导出 Excel。GPS采用精度门限、跳点剔除和速度适应短窗平滑。',58,c.height-36);
+      c.toBlob(blob=>{if(blob)downloadBlob(blob,`RoadAura_测量图表_${new Date().toISOString().slice(0,10)}.jpg`);else toast('当前浏览器无法生成 JPG')},'image/jpeg',.94)
+    }
+    async function clearData(){if(!confirm('清除当前浏览器中的事件、原始采样与 GPS 轨迹？此操作不可撤销。'))return;if(state.running)stopField();state.records=[];state.recentSamples=[];state.fieldFallbackSamples=[];state.demoSamples=[];state.sampleBatch=[];state.gpsTrack=[];state.gpsFallback=[];state.gpsBatch=[];state.serial=1;state.wave=Array.from({length:120},()=>({value:0,artifact:false}));state.gps=null;state.rawGps=null;state.lastGoodGps=null;state.gpsWindow=[];state.gravity=null;state.artifactCount=0;state.gpsFixCount=0;state.mapCenter=null;state.mapGridKey=null;localStorage.removeItem(STORE);localStorage.removeItem('roadaura_gps_track_v1');await flushSamples();await flushGps();await state.writeQueue;await dbClear();state.fieldFallbackSamples=[];state.gpsFallback=[];state.dbFailed=false;state.active=null;state.rejectUntil=0;state.lastVertical=null;state.previousTime=0;state.gpsErrorText='';state.history=[];$('last-value').textContent='—';$('gps-status').innerHTML='<b>GPS：</b>未定位';$('capture-state').textContent='记录已清除';renderRecords();draw();toast('本机事件、传感器样本和 GPS 轨迹已清除')}
+    function runSelfTests(){const tests=[];const add=(name,ok)=>tests.push({name,ok:!!ok});const t=Array.from({length:10},(_,i)=>i*40);add('双峰先正后负识别为凸起响应',classifyResponse([0,1,4,7,4,1,-2,-5,-2,0],BASE_THRESHOLD,t,[0,.1,-.1,.05]).kind==='protrusion');add('双峰先负后正识别为凹陷响应',classifyResponse([0,-1,-4,-7,-4,-1,2,5,2,0],BASE_THRESHOLD,t,[0,.1,-.1,.05]).kind==='depression');add('次峰较弱的凹陷响应仍可识别',classifyResponse([0,0,0,-6,-4,-1,0,2.2,1,0],BASE_THRESHOLD,t).kind==='depression');add('次峰较弱的凸起响应仍可识别',classifyResponse([0,0,0,6,4,1,0,-2.2,-1,0],BASE_THRESHOLD,t).kind==='protrusion');add('信号基线偏置后仍保留分类',classifyResponse([2,3,6,9,6,3,0,-3,0,2],BASE_THRESHOLD,t,[2,2.1,1.9]).kind==='protrusion');add('单峰不强行判型',classifyResponse([0,0,0,6,2,0,0,0],BASE_THRESHOLD,null,[0,.1,-.1]).kind==='unknown');add('过近双峰不强行判型',classifyResponse([0,0,0,7,-6,0,0,0],BASE_THRESHOLD,[0,40,80,120,160,200,240,280]).kind==='unknown');add('峰间隔过长不强行判型',classifyResponse([0,0,0,7,3,0,0,-6,0,0],BASE_THRESHOLD,[0,40,80,120,160,200,240,1100,1140,1180]).kind==='unknown');add('平路噪声不报事件',classifyResponse([.1,-.2,.15,-.1,.2,0]).kind==='none');add('横置手机沿重力方向取竖直分量',Math.abs(inspectMotion({x:4,y:0,z:0},{x:9.8,y:0,z:0},null,{x:9.8,y:0,z:0}).value-4)<.01);add('120m/s²抛掷峰被拦截',inspectMotion({x:0,y:0,z:120},{x:0,y:0,z:120},null,{x:0,y:0,z:9.8}).artifact);add('自由落体样本被拦截',inspectMotion(null,{x:0,y:0,z:.3},null,{x:0,y:0,z:9.8}).artifact);add('GPS远距离跳点被拒',!gpsDisposition({lat:39.9,lng:116.3,accuracy:8,timestamp:1000},{lat:40.0,lng:116.3,accuracy:8},1).accept);add('低精度GPS不进入平滑轨迹',!gpsDisposition(null,{lat:39.9,lng:116.3,accuracy:100},0).accept);const wgs=mapCoordinate({lat:39.908,lng:116.397});add('WGS-84坐标不做私自偏移',wgs.lat===39.908&&wgs.lng===116.397);const loc=locationAtTime(1500,[{timestamp:new Date(1000).toISOString(),accepted:'是',accuracy:8,rawLat:39.9,rawLng:116.3,correctedLat:39.9,correctedLng:116.3},{timestamp:new Date(2000).toISOString(),accepted:'是',accuracy:10,rawLat:39.9002,rawLng:116.3002,correctedLat:39.9002,correctedLng:116.3002}]);add('事件时间插值定位而非记录结束时定位',Math.abs(loc.gps?.lat-39.9001)<1e-8&&Math.abs(loc.gps?.lng-116.3001)<1e-8);add('过期GPS不挂到事件坐标',!locationAtTime(20000,[{timestamp:new Date(1000).toISOString(),accepted:'是',accuracy:8,rawLat:39.9,rawLng:116.3,correctedLat:39.9,correctedLng:116.3}]).gps);add('底图初始视野按千分位粗化',privacyGridKey({lat:39.9084,lng:116.3972})==='39.908,116.397');add('地图编号与记录号一致',eventNumber({id:'F-0042'})==='42');const separated=separateMapMarkers([{record:{id:'F-1'},point:{x:100,y:100}},{record:{id:'F-2'},point:{x:100,y:100}}],300,200,{x:100,y:100});add('当前位置重合时编号点错开且保留计数',separated.length===2&&separated.every(p=>p.displaced&&Math.hypot(p.x-100,p.y-100)>=22)&&Math.hypot(separated[0].x-separated[1].x,separated[0].y-separated[1].y)>=28);const rot=rotationFrom({alpha:1,beta:2,gamma:3});add('rotationRate 的 α/β/γ 正确映射到设备 z/x/y 轴',rot&&rot.x===2&&rot.y===3&&rot.z===1);add('异常高速旋转样本被拦截',inspectMotion({x:0,y:0,z:1},{x:0,y:0,z:9.8},{x:1500,y:0,z:0},{x:0,y:0,z:9.8}).artifact);
+      const car=VEHICLE_PROFILES.car,judge=(d,{speed=d.approach.speedAtEventMps,profile=car,up=d.up,kind='protrusion'}={})=>{const pair=axlePairFeature(d.rows,{speedMps:speed,profile}),rp=rollPitchFeature(d.rows,up,forwardAxis(up,null));return classifySubtype(kind,pair,rp,{...d.approach,speedAtEventMps:speed},profile)};
+      add('前后轮双冲击+俯仰为主+过前减速→减速带型',judge(demoCrossingRows('speed_bump')).subtype==='speed_bump');add('车身侧倾明显→局部凸起型而非减速带',judge(demoCrossingRows('local_bump')).subtype==='local_bump');add('只有一次冲击不判减速带',!/^speed_bump/.test(judge(demoCrossingRows('speed_bump',{rearScale:0})).subtype));add('冲击间隔×车速与轴距不符不判减速带',!/^speed_bump/.test(judge(demoCrossingRows('speed_bump',{speed:12}),{speed:12}).subtype));add('多次连续冲击判为连续颠簸',judge(demoCrossingRows('speed_bump',{extraHits:[[1300,.9],[1650,1],[2000,.8],[2350,1]]})).subtype==='rough');const bike=VEHICLE_PROFILES.bike;add('两轮车：双冲击+车把无转向扰动+过前减速→减速带型',judge(demoCrossingRows('speed_bump',{lag:480,speed:2.5}),{profile:bike}).subtype==='speed_bump');add('两轮车：车把转向扰动明显→局部凸起型',judge(demoCrossingRows('local_bump',{lag:480,speed:2.5}),{profile:bike}).subtype==='local_bump');{const d=demoCrossingRows('speed_bump',{lag:480,speed:2.5});d.rows.forEach(r=>{r.rot=null});add('两轮车无陀螺仪时最多判疑似减速带',judge(d,{profile:bike}).subtype==='speed_bump_possible')}add('手机平放且未学到车头方向时不做侧倾判断',!rollPitchFeature(demoCrossingRows('speed_bump').rows,{x:0,y:0,z:1},forwardAxis({x:0,y:0,z:1},null)).rollAvailable);add('过前减速量按事件前 8 秒最高车速计算',approachFeature([{time:0,speed:7,source:'GPS多普勒'},{time:4000,speed:3,source:'GPS多普勒'}],4200).preBrakeDropMps===4);add('GPS 学到的车头方向优先于支架默认假设',forwardAxis({x:0,y:1,z:0},{count:5,cov:[1,0,0,0,0,0,0,0,.05]}).source==='GPS加减速学习');
+      const passed=tests.filter(t=>t.ok).length,el=$('selftest-status');if(el){el.textContent='模拟自检 '+passed+'/'+tests.length+' 项通过（不代表实测准确率）';el.style.color=passed===tests.length?'#4c766f':'#b8483d'}console.info('RoadAura simulation checks',tests);return tests}
+    function restoreGps(){let localRows=[];try{const rows=JSON.parse(localStorage.getItem('roadaura_gps_track_v1')||'[]');if(Array.isArray(rows))localRows=rows}catch(_){}dbRead('gps').then(rows=>{const merged=[...(rows||[]),...localRows,...state.gpsTrack],byTime=new Map(merged.map(r=>[r.timestamp,r]));state.gpsTrack=[...byTime.values()].sort((a,b)=>String(a.timestamp).localeCompare(String(b.timestamp))).slice(-3000);const last=state.gpsTrack[state.gpsTrack.length-1],lastTime=Date.parse(last?.timestamp||'');if(last&&Number.isFinite(Number(last.rawLat))&&Number.isFinite(Number(last.rawLng))&&(!state.rawGps||lastTime>state.rawGps.timestamp))state.rawGps={lat:Number(last.rawLat),lng:Number(last.rawLng),accuracy:Number(last.accuracy),timestamp:lastTime,accepted:last.accepted==='是'};const accepted=state.gpsTrack.filter(r=>r.accepted==='是'&&Number.isFinite(Number(r.correctedLat))&&Number.isFinite(Number(r.correctedLng)));const good=accepted[accepted.length-1],goodTime=Date.parse(good?.timestamp||'');if(good&&(!state.gps||goodTime>state.gps.timestamp)){state.gps={lat:Number(good.correctedLat),lng:Number(good.correctedLng),accuracy:Number(good.accuracy),raw:{lat:Number(good.rawLat),lng:Number(good.rawLng),accuracy:Number(good.accuracy)},timestamp:goodTime,speedMps:good.speed!==''&&Number.isFinite(Number(good.speed))?Number(good.speed):null};state.lastGoodGps={lat:Number(good.rawLat),lng:Number(good.rawLng),accuracy:Number(good.accuracy),timestamp:goodTime};state.gpsWindow=accepted.slice(-5).map(r=>({lat:Number(r.rawLat),lng:Number(r.rawLng),accuracy:Number(r.accuracy),timestamp:Date.parse(r.timestamp)}))}if(!state.running&&state.rawGps&&(!state.mapCenter||!state.autoCenter)){const p=visibleGps();state.mapCenter={lat:p.lat,lng:p.lng};state.autoCenter=true;state.mapGridKey=null}if(state.rawGps&&!state.running)$('gps-status').innerHTML='<b>GPS：</b>已载入本机历史点，请点击重新定位';renderMap()})}
+    $('tab-demo').addEventListener('click',()=>setMode('demo'));$('tab-field').addEventListener('click',()=>{setMode('field');locateNow()});$('play-demo').addEventListener('click',playDemo);$('step-demo').addEventListener('click',addOneDemo);$('start-field').addEventListener('click',startField);$('stop-field').addEventListener('click',stopField);$('export-xlsx').addEventListener('click',exportXlsx);$('export-jpg').addEventListener('click',exportJpg);$('export-csv').addEventListener('click',exportCsv);$('clear-data').addEventListener('click',clearData);$('selftest-btn').addEventListener('click',runSelfTests);window.addEventListener('resize',()=>{resizeCanvas();state.map?.resize?.();renderMap()});$('map-consent').addEventListener('change',()=>{if(!$('map-consent').checked){state.map?.remove?.();state.map=null;state.mapReady=false;state.mapError=null;state.mapGridKey=null;$('map-attribution').hidden=true;$('map-chip').textContent='本地定位图';$('map-chip').classList.add('sim');$('load-openmap').textContent='连接开放地图（无需 Key）';renderMap()}});window.addEventListener('beforeunload',stopField);setupMap();load();restoreGps();resizeCanvas();if(state.mode==='demo')setMode('demo');runSelfTests();
+  })();
+  </script>
+</body>
+</html>
